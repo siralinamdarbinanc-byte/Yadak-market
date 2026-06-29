@@ -848,7 +848,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
 }
 
 @Composable
-fun BottomNavBar() {
+fun BottomNavBar(onSettingsClick: () -> Unit = {}) {
     NavigationBar(
         containerColor = GeoBottomNavBg,
         tonalElevation = 8.dp,
@@ -879,7 +879,7 @@ fun BottomNavBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = { showSettings = true },
+            onClick = { onSettingsClick() },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Category,
@@ -892,7 +892,7 @@ fun BottomNavBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = { showSettings = true },
+            onClick = { onSettingsClick() },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.History,
@@ -905,7 +905,7 @@ fun BottomNavBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = { showSettings = true },
+            onClick = { onSettingsClick() },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Settings,
