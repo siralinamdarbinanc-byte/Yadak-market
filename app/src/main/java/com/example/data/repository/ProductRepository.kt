@@ -19,16 +19,10 @@ class ProductRepository(
     fun searchProducts(query: String): Flow<List<ProductEntity>> = productDao.searchProducts(query)
 
     suspend fun checkAndSeedDatabase() = withContext(Dispatchers.IO) {
-        val count = productDao.getCount()
-        if (count == 0) {
-            Log.d("ProductRepository", "Database is empty. Seeding from assets...")
-            val products = loadProductsFromCsv()
-            if (products.isNotEmpty()) {
-                productDao.insertAll(products)
-                Log.d("ProductRepository", "Successfully seeded ${products.size} products.")
-            }
-        } else {
-            Log.d("ProductRepository", "Database already contains $count products. Skipping seeding.")
+        val products = loadProductsFromCsv()
+        if (products.isNotEmpty()) {
+            productDao.insertAll(products)
+            Log.d("ProductRepository", "Synced ${products.size} products.")
         }
     }
 
