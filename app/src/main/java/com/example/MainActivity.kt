@@ -715,24 +715,16 @@ fun ProductRowCard(product: Product, category: String) {
                     textAlign = TextAlign.Right,
                     maxLines = 2
                 )
-                Row(
-                    horizontalArrangement = Arrangement.End,
+                Text(
+                    text = product.brand,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    ),
+                    textAlign = TextAlign.Right,
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "دسته: $category • ",
-                        style = MaterialTheme.typography.bodySmall.copy(color = GeoMutedText),
-                        textAlign = TextAlign.Right
-                    )
-                    Text(
-                        text = product.brand,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = GeoPrimary,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        textAlign = TextAlign.Right
-                    )
-                }
+                )
             }
 
             // Price Block
