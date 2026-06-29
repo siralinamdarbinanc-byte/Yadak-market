@@ -373,7 +373,7 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
     val filteredProducts = remember(normalizedQuery, selectedCategory, selectedBrand, minPriceInput, maxPriceInput, sortOrder) {
         rawProducts.filter { product ->
             val matchesQuery = if (normalizedQuery.isBlank()) true else {
-                val tokens = normalizedQuery.trim().split("\s+".toRegex())
+                val tokens = normalizedQuery.trim().split(Regex("\\s+"))
                 val searchIn = normalizeQuery(product.name) + " " + normalizeQuery(product.brand)
                 tokens.all { token -> searchIn.contains(token) }
             }
