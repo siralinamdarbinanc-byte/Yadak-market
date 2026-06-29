@@ -19,7 +19,7 @@ class ProductRepository(
     fun searchProducts(query: String): Flow<List<ProductEntity>> = productDao.searchProducts(query)
 
     suspend fun checkAndSeedDatabase() = withContext(Dispatchers.IO) {
-        val CSV_VERSION = 2
+        val CSV_VERSION = 3
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val savedVersion = prefs.getInt("csv_version", 0)
         if (savedVersion >= CSV_VERSION) return@withContext
