@@ -758,14 +758,14 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "$displayPriceToman تومان",
+                    text = "$displayPriceToman ریال",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = GeoPrimary
                     )
                 )
                 Text(
-                    text = "${product.price} ریال",
+                    text = "",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = GeoMutedText,
                         fontSize = 10.sp
