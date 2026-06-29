@@ -19,9 +19,15 @@ class ProductRepository(
     fun searchProducts(query: String): Flow<List<ProductEntity>> = productDao.searchProducts(query)
 
     suspend fun checkAndSeedDatabase() = withContext(Dispatchers.IO) {
+        val CSV_VERSION = 2
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val savedVersion = prefs.getInt("csv_version", 0)
+        if (savedVersion >= CSV_VERSION) return@withContext
+        productDao.deleteAll()
         val products = loadProductsFromCsv()
         if (products.isNotEmpty()) {
             productDao.insertAll(products)
+            prefs.edit().putInt("csv_version", CSV_VERSION).apply()
             Log.d("ProductRepository", "Synced ${products.size} products.")
         }
     }
@@ -29,35 +35,21 @@ class ProductRepository(
     private fun loadProductsFromCsv(): List<ProductEntity> {
         val products = mutableListOf<ProductEntity>()
         try {
-            val assetManager = context.assets
-            val inputStream = assetManager.open("products.csv")
+            val inputStream = context.assets.open("products.csv")
             val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
-            var line = reader.readLine() // Read header row (ردیف,نام کالا,برند,قیمت فروش به ریال)
-            
+            reader.readLine()
+            var line: String?
             while (reader.readLine().also { line = it } != null) {
                 val row = line ?: continue
                 if (row.isBlank()) continue
-                
                 val tokens = parseCsvLine(row)
                 if (tokens.size >= 4) {
-                    val idStr = tokens[0]
+                    val id = tokens[0].toIntOrNull() ?: continue
                     val name = tokens[1]
                     val brand = tokens[2]
                     val price = tokens[3]
-                    
-                    val id = idStr.toIntOrNull() ?: continue
-                    val priceCleaned = price.replace("\"", "").replace(",", "").trim()
-                    val priceNumeric = priceCleaned.toLongOrNull() ?: 0L
-                    
-                    products.add(
-                        ProductEntity(
-                            id = id,
-                            name = name,
-                            brand = brand,
-                            price = price.replace("\"", ""),
-                            priceNumeric = priceNumeric
-                        )
-                    )
+                    val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
+                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric))
                 }
             }
             reader.close()
@@ -73,16 +65,12 @@ class ProductRepository(
         var inQuotes = false
         for (char in line) {
             when {
-                char == '\"' -> {
-                    inQuotes = !inQuotes
-                }
+                char == '\"' -> inQuotes = !inQuotes
                 char == ',' && !inQuotes -> {
                     tokens.add(currentToken.toString().trim())
                     currentToken.setLength(0)
                 }
-                else -> {
-                    currentToken.append(char)
-                }
+                else -> currentToken.append(char)
             }
         }
         tokens.add(currentToken.toString().trim())
