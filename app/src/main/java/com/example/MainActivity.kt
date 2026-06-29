@@ -95,7 +95,10 @@ fun SearchEngineContent(
     val allProducts by viewModel.uiState.collectAsState()
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.importCsv(it) }
+        uri?.let {
+            val fileName = it.lastPathSegment?.substringAfterLast("/") ?: "فایل ناشناس"
+            viewModel.importCsv(it, fileName)
+        }
     }
     val DUMMY = listOf(
         Product(3001, "بلبرینگ چرخ جلو پژو405", "PSN", "17,100,500", 17100500),
