@@ -372,7 +372,11 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
 
     val filteredProducts = remember(normalizedQuery, selectedCategory, selectedBrand, minPriceInput, maxPriceInput, sortOrder) {
         rawProducts.filter { product ->
-            val matchesQuery = normalizedQuery.isBlank() || normalizeQuery(product.name).contains(normalizedQuery) || normalizeQuery(product.brand).contains(normalizedQuery)
+            val matchesQuery = if (normalizedQuery.isBlank()) true else {
+                val tokens = normalizedQuery.trim().split("\s+".toRegex())
+                val searchIn = normalizeQuery(product.name) + " " + normalizeQuery(product.brand)
+                tokens.all { token -> searchIn.contains(token) }
+            }
             val productCat = determineCategory(product.name)
             val matchesCategory = selectedCategory == "همه دسته‌ها" || productCat == selectedCategory
             val matchesBrand = selectedBrand == "همه برندها" || product.brand == selectedBrand
