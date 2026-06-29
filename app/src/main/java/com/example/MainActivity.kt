@@ -359,9 +359,20 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
     )
 
     // Filtered list
-    val filteredProducts = remember(searchQuery, selectedCategory, selectedBrand, minPriceInput, maxPriceInput, sortOrder) {
+    fun normalizeQuery(q: String): String {
+        val persian = "۰۱۲۳۴۵۶۷۸۹"
+        val arabic = "٠١٢٣٤٥٦٧٨٩"
+        var result = q
+        persian.forEachIndexed { i, c -> result = result.replace(c, '0' + i) }
+        arabic.forEachIndexed { i, c -> result = result.replace(c, '0' + i) }
+        return result
+    }
+
+    val normalizedQuery = normalizeQuery(searchQuery)
+
+    val filteredProducts = remember(normalizedQuery, selectedCategory, selectedBrand, minPriceInput, maxPriceInput, sortOrder) {
         rawProducts.filter { product ->
-            val matchesQuery = searchQuery.isBlank() || product.name.contains(searchQuery) || product.brand.contains(searchQuery)
+            val matchesQuery = normalizedQuery.isBlank() || normalizeQuery(product.name).contains(normalizedQuery) || normalizeQuery(product.brand).contains(normalizedQuery)
             val productCat = determineCategory(product.name)
             val matchesCategory = selectedCategory == "همه دسته‌ها" || productCat == selectedCategory
             val matchesBrand = selectedBrand == "همه برندها" || product.brand == selectedBrand
@@ -585,6 +596,18 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
         }
 
         Spacer(modifier = Modifier.height(6.dp))
+
+        // تعداد نتایج
+        if (normalizedQuery.isNotBlank() || selectedCategory != "همه دسته‌ها" || selectedBrand != "همه برندها") {
+            Text(
+                text = "${filteredProducts.size} مورد یافت شد",
+                fontSize = 12.sp,
+                color = GeoMutedText,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Right
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
 
         // --- 5. RESULTS LIST OR EMPTY STATE ---
         if (filteredProducts.isEmpty()) {
