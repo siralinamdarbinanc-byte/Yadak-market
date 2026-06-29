@@ -49,8 +49,8 @@ class ProductRepository(
                     val name = tokens[1]
                     val brand = tokens[2]
                     val price = tokens[3]
-                    val priceNumeric = price.replace(\", "").replace(",", "").trim().toLongOrNull() ?: 0L
-                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace(\", ""), priceNumeric = priceNumeric))
+                    val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
+                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric))
                 }
             }
             reader.close()
