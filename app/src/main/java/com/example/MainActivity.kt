@@ -85,6 +85,7 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
+    var showSettings by remember { mutableStateOf(false) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { viewModel.importCsv(it) }
     }
@@ -412,23 +413,12 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Import CSV Button
-        Button(
-            onClick = { csvLauncher.launch("text/*") },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            shape = RoundedCornerShape(10.dp),
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("ورود CSV", fontSize = 12.sp, color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(6.dp))
 
         // App Branding / Header
         Text(
             text = "یدک مارکت (زینلی)",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.ExtraBold,
             color = GeoPrimary,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -666,13 +656,36 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
                     .weight(1f)
                     .testTag("product_list"),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 12.dp)
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(filteredProducts, key = { it.row }) { product ->
                     ProductRowCard(product = product, category = determineCategory(product.name), onClick = { selectedProduct = product })
                 }
             }
         }
+    }
+    if (showSettings) {
+        AlertDialog(
+            onDismissRequest = { showSettings = false },
+            containerColor = GeoInactivePillBg,
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "تنظیمات", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GeoText)
+                    IconButton(onClick = { showSettings = false }) { Icon(Icons.Default.Close, contentDescription = "بستن", tint = GeoText) }
+                }
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = { csvLauncher.launch("text/*"); showSettings = false }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("ورود CSV", fontSize = 14.sp, color = Color.White)
+                    }
+                }
+            },
+            confirmButton = {}
+        )
     }
     // Product Detail Dialog
     selectedProduct?.let { product ->
@@ -864,7 +877,7 @@ fun BottomNavBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = { showSettings = true },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Category,
@@ -877,7 +890,7 @@ fun BottomNavBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = { showSettings = true },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.History,
@@ -890,7 +903,7 @@ fun BottomNavBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = { showSettings = true },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Settings,
