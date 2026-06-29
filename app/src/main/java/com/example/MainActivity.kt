@@ -57,14 +57,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
+                var showSettings by remember { mutableStateOf(false) }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    bottomBar = { BottomNavBar() }
+                    bottomBar = { BottomNavBar(onSettingsClick = { showSettings = true }) }
                 ) { innerPadding ->
                     SearchEngineContent(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
+                            .padding(innerPadding),
+                        showSettings = showSettings,
+                        onDismissSettings = { showSettings = false }
                     )
                 }
             }
@@ -82,11 +85,15 @@ data class Product(
 )
 
 @Composable
-fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewModel = viewModel()) {
+fun SearchEngineContent(
+    modifier: Modifier = Modifier,
+    viewModel: ProductViewModel = viewModel(),
+    showSettings: Boolean = false,
+    onDismissSettings: () -> Unit = {}
+) {
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
-    var showSettings by remember { mutableStateOf(false) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { viewModel.importCsv(it) }
     }
@@ -668,18 +675,18 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
     }
     if (showSettings) {
         AlertDialog(
-            onDismissRequest = { showSettings = false },
+            onDismissRequest = { onDismissSettings() },
             containerColor = GeoInactivePillBg,
             shape = RoundedCornerShape(16.dp),
             title = {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(text = "تنظیمات", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GeoText)
-                    IconButton(onClick = { showSettings = false }) { Icon(Icons.Default.Close, contentDescription = "بستن", tint = GeoText) }
+                    IconButton(onClick = { onDismissSettings() }) { Icon(Icons.Default.Close, contentDescription = "بستن", tint = GeoText) }
                 }
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = { csvLauncher.launch("text/*"); showSettings = false }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = { csvLauncher.launch("text/*"); onDismissSettings() }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("ورود CSV", fontSize = 14.sp, color = Color.White)
