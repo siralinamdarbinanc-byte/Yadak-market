@@ -1,6 +1,7 @@
 package com.example
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -333,6 +334,7 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
     var maxPriceInput by remember { mutableStateOf("") }
     var sortOrder by remember { mutableStateOf(SortOrder.NAME_ASC) }
     var showAdvancedFilters by remember { mutableStateOf(false) }
+    BackHandler(enabled = showAdvancedFilters) { showAdvancedFilters = false }
 
     // Unique Brands
     val brandsList = remember { listOf("همه برندها") + rawProducts.map { it.brand }.distinct().sorted() }
