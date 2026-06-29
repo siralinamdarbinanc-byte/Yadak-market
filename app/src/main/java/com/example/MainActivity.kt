@@ -85,7 +85,6 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
-    var selectedProduct by remember { mutableStateOf<Product?>(null) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { viewModel.importCsv(it) }
     }
