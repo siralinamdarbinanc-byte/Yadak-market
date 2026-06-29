@@ -1,0 +1,6 @@
+{
+  "name": "موتور جستجوی قطعات",
+  "description": "موتور جستجوی هوشمند و پیشرفته لیست قیمت قطعات مغازه با فیلترهای پیشرفته و دسته‌بندی خودکار",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
