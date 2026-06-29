@@ -674,6 +674,9 @@ fun SearchEngineContent(
         }
     }
     if (showSettings) {
+        val csvFiles by viewModel.csvFiles.collectAsState()
+        var showDeleteConfirm by remember { mutableStateOf<Int?>(null) }
+
         AlertDialog(
             onDismissRequest = { onDismissSettings() },
             containerColor = GeoInactivePillBg,
@@ -686,15 +689,68 @@ fun SearchEngineContent(
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = { csvLauncher.launch("text/*"); onDismissSettings() }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red), shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = { csvLauncher.launch("text/*") },
+                        colors = ButtonDefaults.buttonColors(containerColor = GeoPrimary),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("ورود CSV", fontSize = 14.sp, color = Color.White)
+                        Text("ورود CSV جدید", fontSize = 14.sp, color = Color.White)
+                    }
+
+                    if (csvFiles.isNotEmpty()) {
+                        HorizontalDivider(color = GeoBorder)
+                        Text("فایل‌های وارد شده:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
+                        csvFiles.forEach { csv ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = GeoSearchBarBg),
+                                border = BorderStroke(1.dp, GeoBorder),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(text = csv.fileName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
+                                        Text(text = "${csv.productCount} محصول", fontSize = 11.sp, color = GeoMutedText)
+                                    }
+                                    IconButton(onClick = { showDeleteConfirm = csv.id }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Color.Red)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        Text("هنوز فایل CSV وارد نشده", fontSize = 12.sp, color = GeoMutedText, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                 }
             },
             confirmButton = {}
         )
+
+        showDeleteConfirm?.let { csvId ->
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirm = null },
+                containerColor = GeoInactivePillBg,
+                shape = RoundedCornerShape(16.dp),
+                title = { Text("حذف فایل CSV", fontWeight = FontWeight.Bold, color = GeoText) },
+                text = { Text("این فایل و تمام محصولاتش حذف می‌شن. مطمئنی؟", color = GeoText) },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.deleteCsv(csvId); showDeleteConfirm = null },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) { Text("حذف", color = Color.White) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirm = null }) { Text("انصراف", color = GeoPrimary) }
+                }
+            )
+        }
     }
     // Product Detail Dialog
     selectedProduct?.let { product ->

@@ -1,10 +1,12 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.db.AppDatabase
 import com.example.data.local.entity.ProductEntity
+import com.example.data.local.entity.CsvFileEntity
 import com.example.data.repository.ProductRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -28,12 +30,10 @@ data class FilterState(
 class ProductViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: ProductRepository
-    
+
     init {
         val db = AppDatabase.getDatabase(application)
-        repository = ProductRepository(application, db.productDao())
-        
-        // Seed the database if empty on startup
+        repository = ProductRepository(application, db.productDao(), db.csvFileDao())
         viewModelScope.launch {
             repository.checkAndSeedDatabase()
         }
@@ -42,27 +42,21 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private val _filterState = MutableStateFlow(FilterState())
     val filterState: StateFlow<FilterState> = _filterState.asStateFlow()
 
-    // Trigger searches or grab all products
     @OptIn(ExperimentalCoroutinesApi::class)
     private val rawProductsFlow: Flow<List<ProductEntity>> = _filterState
         .map { it.query }
         .distinctUntilChanged()
         .flatMapLatest { query ->
-            if (query.isBlank()) {
-                repository.getAllProducts()
-            } else {
-                repository.searchProducts(query)
-            }
+            if (query.isBlank()) repository.getAllProducts()
+            else repository.searchProducts(query)
         }
 
-    // List of dynamic brands extracted from current search results or whole dataset
     val availableBrands: StateFlow<List<String>> = repository.getAllProducts()
         .map { products ->
             listOf("همه برندها") + products.map { it.brand }.distinct().sorted()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("همه برندها"))
 
-    // List of static categories supported
     val availableCategories = listOf(
         "همه دسته‌ها",
         "بلبرینگ و رولبرینگ",
@@ -78,7 +72,6 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         "سایر قطعات"
     )
 
-    // Filtered and sorted products flow
     val uiState: StateFlow<List<ProductEntity>> = combine(
         rawProductsFlow,
         _filterState
@@ -88,7 +81,6 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
             val matchesCategory = filters.selectedCategory == "همه دسته‌ها" || product.determineCategory() == filters.selectedCategory
             val matchesPriceMin = filters.priceMin == null || product.priceNumeric >= filters.priceMin
             val matchesPriceMax = filters.priceMax == null || product.priceNumeric <= filters.priceMax
-            
             matchesBrand && matchesCategory && matchesPriceMin && matchesPriceMax
         }.sortedWith { p1, p2 ->
             when (filters.sortOrder) {
@@ -99,41 +91,26 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Update query
-    fun updateQuery(query: String) {
-        _filterState.update { it.copy(query = query) }
-    }
+    // CSV files list
+    val csvFiles: StateFlow<List<CsvFileEntity>> = repository.getAllCsvFiles()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Update brand filter
-    fun selectBrand(brand: String) {
-        _filterState.update { it.copy(selectedBrand = brand) }
-    }
+    fun updateQuery(query: String) = _filterState.update { it.copy(query = query) }
+    fun selectBrand(brand: String) = _filterState.update { it.copy(selectedBrand = brand) }
+    fun selectCategory(category: String) = _filterState.update { it.copy(selectedCategory = category) }
+    fun updateSortOrder(order: SortOrder) = _filterState.update { it.copy(sortOrder = order) }
+    fun updatePriceFilter(min: Long?, max: Long?) = _filterState.update { it.copy(priceMin = min, priceMax = max) }
+    fun clearFilters() = _filterState.update { FilterState(query = it.query) }
 
-    // Update category filter
-    fun selectCategory(category: String) {
-        _filterState.update { it.copy(selectedCategory = category) }
-    }
-
-    // Update sorting
-    fun updateSortOrder(order: SortOrder) {
-        _filterState.update { it.copy(sortOrder = order) }
-    }
-
-    // Update price limits
-    fun updatePriceFilter(min: Long?, max: Long?) {
-        _filterState.update { it.copy(priceMin = min, priceMax = max) }
-    }
-
-    fun importCsv(uri: android.net.Uri) {
+    fun importCsv(uri: Uri, fileName: String) {
         viewModelScope.launch {
-            repository.importCsvFromUri(uri)
+            repository.importCsvFromUri(uri, fileName)
         }
     }
 
-    // Reset all filters
-    fun clearFilters() {
-        _filterState.update { 
-            FilterState(query = it.query) // Keep query but reset brand, category, sort
+    fun deleteCsv(csvId: Int) {
+        viewModelScope.launch {
+            repository.deleteCsvAndProducts(csvId)
         }
     }
 }
