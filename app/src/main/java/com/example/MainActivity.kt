@@ -852,9 +852,8 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}) {
     NavigationBar(
         containerColor = GeoBottomNavBg,
         tonalElevation = 8.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
+        windowInsets = NavigationBarDefaults.windowInsets,
+        modifier = Modifier.fillMaxWidth()
     ) {
         NavigationBarItem(
             selected = true,
