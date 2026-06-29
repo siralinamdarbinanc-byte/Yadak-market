@@ -424,7 +424,7 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
 
         // App Branding / Header
         Text(
-            text = "موتور جستجوی قطعات YADEA",
+            text = "یدک مارکت (زینلی)",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = GeoPrimary,
