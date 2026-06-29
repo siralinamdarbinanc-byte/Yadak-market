@@ -885,7 +885,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}) {
 
         NavigationBarItem(
             selected = false,
-            onClick = { onSettingsClick() },
+            onClick = {},
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Category,
@@ -898,7 +898,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}) {
 
         NavigationBarItem(
             selected = false,
-            onClick = { onSettingsClick() },
+            onClick = {},
             icon = {
                 Icon(
                     imageVector = Icons.Filled.History,
