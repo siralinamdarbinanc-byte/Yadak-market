@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -679,7 +680,8 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
 @Composable
 fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {}) {
     val df = DecimalFormat("#,###")
-    val displayPriceToman = df.format(product.numericPrice / 10)
+    val adjustedPrice = if (product.numericPrice / 10 < 8000) (product.numericPrice * 1.4).toLong() / 10 else product.numericPrice / 10
+    val displayPriceToman = df.format(adjustedPrice)
 
     Card(
         modifier = Modifier
