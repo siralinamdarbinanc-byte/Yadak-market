@@ -83,6 +83,8 @@ data class Product(
 fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewModel = viewModel()) {
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { viewModel.importCsv(it) }
     }
@@ -667,7 +669,7 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
                 items(filteredProducts, key = { it.row }) { product ->
-                    ProductRowCard(product = product, category = determineCategory(product.name))
+                    ProductRowCard(product = product, category = determineCategory(product.name), onClick = { selectedProduct = product })
                 }
             }
         }
@@ -675,14 +677,15 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
 }
 
 @Composable
-fun ProductRowCard(product: Product, category: String) {
+fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {}) {
     val df = DecimalFormat("#,###")
     val displayPriceToman = df.format(product.numericPrice / 10)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("product_card_${product.row}"),
+            .testTag("product_card_${product.row}")
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = GeoInactivePillBg),
         border = BorderStroke(1.dp, GeoBorder)
