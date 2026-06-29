@@ -1,6 +1,10 @@
 package com.example
 
 import android.os.Bundle
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -79,6 +83,9 @@ data class Product(
 fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewModel = viewModel()) {
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
+    val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { viewModel.importCsv(it) }
+    }
     val DUMMY = listOf(
         Product(3001, "بلبرینگ چرخ جلو پژو405", "PSN", "17,100,500", 17100500),
         Product(3002, "بلبرینگ تقویتی چرخ جلو405", "PSN", "29,086,950", 29086950),
@@ -402,6 +409,19 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Import CSV Button
+        Button(
+            onClick = { csvLauncher.launch("text/*") },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("ورود CSV", fontSize = 12.sp, color = Color.White)
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+
         // App Branding / Header
         Text(
             text = "موتور جستجوی قطعات YADEA",

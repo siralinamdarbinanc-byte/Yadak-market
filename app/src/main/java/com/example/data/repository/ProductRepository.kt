@@ -32,6 +32,35 @@ class ProductRepository(
         }
     }
 
+    suspend fun importCsvFromUri(uri: Uri) = withContext(Dispatchers.IO) {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext
+            val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
+            reader.readLine() // skip header
+            val products = mutableListOf<ProductEntity>()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val row = line ?: continue
+                if (row.isBlank()) continue
+                val tokens = parseCsvLine(row)
+                if (tokens.size >= 4) {
+                    val id = tokens[0].toIntOrNull() ?: continue
+                    val name = tokens[1]
+                    val brand = tokens[2]
+                    val price = tokens[3]
+                    val priceNumeric = price.replace(""", "").replace(",", "").trim().toLongOrNull() ?: 0L
+                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace(""", ""), priceNumeric = priceNumeric))
+                }
+            }
+            reader.close()
+            if (products.isNotEmpty()) {
+                productDao.insertAll(products)
+            }
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "Error importing CSV", e)
+        }
+    }
+
     private fun loadProductsFromCsv(): List<ProductEntity> {
         val products = mutableListOf<ProductEntity>()
         try {

@@ -124,6 +124,12 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         _filterState.update { it.copy(priceMin = min, priceMax = max) }
     }
 
+    fun importCsv(uri: android.net.Uri) {
+        viewModelScope.launch {
+            repository.importCsvFromUri(uri)
+        }
+    }
+
     // Reset all filters
     fun clearFilters() {
         _filterState.update { 
