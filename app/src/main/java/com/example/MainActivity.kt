@@ -40,6 +40,10 @@ import java.util.Locale
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.SortOrder
 import com.example.ui.viewmodel.FilterState
+import com.example.ui.viewmodel.ProductViewModel
+import com.example.data.local.entity.ProductEntity
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,11 +76,10 @@ data class Product(
 )
 
 @Composable
-fun SearchEngineContent(modifier: Modifier = Modifier) {
+fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewModel = viewModel()) {
     val focusManager = LocalFocusManager.current
-
-    // Sample list extracted from user's CSV data
-    val rawProducts = listOf(
+    val allProducts by viewModel.uiState.collectAsState()
+    val DUMMY = listOf(
         Product(3001, "بلبرینگ چرخ جلو پژو405", "PSN", "17,100,500", 17100500),
         Product(3002, "بلبرینگ تقویتی چرخ جلو405", "PSN", "29,086,950", 29086950),
         Product(3003, "توپی چرخ عقب پژو405 - ترمز ضد قفلABS", "PSN", "26,621,350", 26621350),
@@ -310,6 +313,7 @@ fun SearchEngineContent(modifier: Modifier = Modifier) {
         Product(6034, "وایر شمع سمند E-F7", "JPA", "3,464,720", 3464720),
         Product(6042, "هواکش کامل پژو 206 تیپ 5", "JPA", "13,111,840", 13111840)
     )
+    val rawProducts = allProducts.map { e -> Product(e.id, e.name, e.brand, e.price, e.priceNumeric) }
 
     // Filters and search logic
     var searchQuery by remember { mutableStateOf("") }
