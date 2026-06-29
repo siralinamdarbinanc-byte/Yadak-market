@@ -674,13 +674,70 @@ fun SearchEngineContent(modifier: Modifier = Modifier, viewModel: ProductViewMod
             }
         }
     }
+    // Product Detail Dialog
+    selectedProduct?.let { product ->
+        val df2 = DecimalFormat("#,###")
+        val rawPrice2 = if (product.numericPrice < 80000) (product.numericPrice * 1.4).toLong() else product.numericPrice
+        val roundedPrice2 = (rawPrice2 / 1000 + if (rawPrice2 % 1000 > 0) 1 else 0) * 1000
+        AlertDialog(
+            onDismissRequest = { selectedProduct = null },
+            containerColor = GeoInactivePillBg,
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "جزئیات محصول", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GeoText)
+                    IconButton(onClick = { selectedProduct = null }) {
+                        Icon(Icons.Default.Close, contentDescription = "بستن", tint = GeoText)
+                    }
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = product.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GeoText,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = product.brand,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red,
+                        textAlign = TextAlign.Right,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    HorizontalDivider(color = GeoBorder)
+                    Text(text = "${df2.format(roundedPrice2)} ریال", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = GeoPrimary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Right)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = product.row.toString(), fontSize = 12.sp, color = GeoText)
+                        Text(text = "کد محصول:", fontSize = 12.sp, color = GeoMutedText)
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
 }
 
 @Composable
 fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {}) {
     val df = DecimalFormat("#,###")
-    val adjustedPrice = if (product.numericPrice / 10 < 8000) (product.numericPrice * 1.4).toLong() / 10 else product.numericPrice / 10
-    val displayPriceToman = df.format(adjustedPrice)
+    val rawPrice = if (product.numericPrice < 80000) (product.numericPrice * 1.4).toLong() else product.numericPrice
+    val roundedPrice = (rawPrice / 1000 + if (rawPrice % 1000 > 0) 1 else 0) * 1000
+    val displayPriceToman = df.format(roundedPrice)
 
     Card(
         modifier = Modifier
