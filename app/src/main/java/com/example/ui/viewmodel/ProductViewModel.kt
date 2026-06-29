@@ -8,6 +8,7 @@ import com.example.data.local.db.AppDatabase
 import com.example.data.local.entity.ProductEntity
 import com.example.data.local.entity.CsvFileEntity
 import com.example.data.repository.ProductRepository
+import com.example.data.repository.CsvPreview
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -102,10 +103,27 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     fun updatePriceFilter(min: Long?, max: Long?) = _filterState.update { it.copy(priceMin = min, priceMax = max) }
     fun clearFilters() = _filterState.update { FilterState(query = it.query) }
 
-    fun importCsv(uri: Uri, fileName: String) {
+    private val _csvPreview = MutableStateFlow<CsvPreview?>(null)
+    val csvPreview: StateFlow<CsvPreview?> = _csvPreview.asStateFlow()
+
+    fun previewCsv(uri: Uri, fileName: String) {
         viewModelScope.launch {
-            repository.importCsvFromUri(uri, fileName)
+            val preview = repository.previewCsv(uri, fileName)
+            _csvPreview.value = preview
         }
+    }
+
+    fun confirmImport(updateDuplicates: Boolean) {
+        viewModelScope.launch {
+            _csvPreview.value?.let {
+                repository.confirmImport(it, updateDuplicates)
+                _csvPreview.value = null
+            }
+        }
+    }
+
+    fun cancelImport() {
+        _csvPreview.value = null
     }
 
     fun deleteCsv(csvId: Int) {

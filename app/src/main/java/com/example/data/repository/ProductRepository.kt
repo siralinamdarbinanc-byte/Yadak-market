@@ -13,6 +13,13 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+data class CsvPreview(
+    val newProducts: List<ProductEntity>,
+    val duplicateProducts: List<ProductEntity>,
+    val fileName: String,
+    val csvId: Int
+)
+
 class ProductRepository(
     private val context: Context,
     private val productDao: ProductDao,
@@ -36,18 +43,14 @@ class ProductRepository(
         }
     }
 
-    suspend fun importCsvFromUri(uri: Uri, fileName: String) = withContext(Dispatchers.IO) {
+    // مرحله ۱: فقط بخون و چک کن
+    suspend fun previewCsv(uri: Uri, fileName: String): CsvPreview? = withContext(Dispatchers.IO) {
         try {
-            val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext null
             val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
             reader.readLine()
             val products = mutableListOf<ProductEntity>()
             var line: String?
-
-            // ثبت CSV در جدول csv_files
-            val csvRecord = CsvFileEntity(fileName = fileName, importedAt = System.currentTimeMillis(), productCount = 0)
-            val csvId = csvFileDao.insert(csvRecord).toInt()
-
             while (reader.readLine().also { line = it } != null) {
                 val row = line ?: continue
                 if (row.isBlank()) continue
@@ -58,20 +61,49 @@ class ProductRepository(
                     val brand = tokens[2]
                     val price = tokens[3]
                     val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
-                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric, csvId = csvId))
+                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric, csvId = 0))
                 }
             }
             reader.close()
 
-            if (products.isNotEmpty()) {
-                productDao.insertAll(products)
-                // آپدیت تعداد محصولات
-                csvFileDao.insert(csvRecord.copy(id = csvId, productCount = products.size))
-                Log.d("ProductRepository", "Imported ${products.size} products from $fileName")
-            }
+            // ثبت CSV
+            val csvRecord = CsvFileEntity(fileName = fileName, importedAt = System.currentTimeMillis(), productCount = products.size)
+            val csvId = csvFileDao.insert(csvRecord).toInt()
+
+            // چک تکراری
+            val allIds = products.map { it.id }
+            val existingIds = productDao.getExistingIds(allIds).toSet()
+            val newProducts = products.filter { it.id !in existingIds }.map { it.copy(csvId = csvId) }
+            val duplicates = products.filter { it.id in existingIds }
+
+            CsvPreview(newProducts, duplicates, fileName, csvId)
         } catch (e: Exception) {
-            Log.e("ProductRepository", "Error importing CSV", e)
+            Log.e("ProductRepository", "Error previewing CSV", e)
+            null
         }
+    }
+
+    // مرحله ۲: import با تصمیم کاربر
+    suspend fun confirmImport(preview: CsvPreview, updateDuplicates: Boolean) = withContext(Dispatchers.IO) {
+        // محصولات جدید رو اضافه کن
+        if (preview.newProducts.isNotEmpty()) {
+            productDao.insertAllIgnore(preview.newProducts)
+        }
+        // اگه کاربر بله زد، قیمت تکراری‌ها رو آپدیت کن
+        if (updateDuplicates) {
+            preview.duplicateProducts.forEach { product ->
+                productDao.updatePrice(product.id, product.price, product.priceNumeric)
+            }
+        }
+        // آپدیت تعداد محصولات توی csv_files
+        val totalImported = preview.newProducts.size + if (updateDuplicates) preview.duplicateProducts.size else 0
+        csvFileDao.insert(CsvFileEntity(
+            id = preview.csvId,
+            fileName = preview.fileName,
+            importedAt = System.currentTimeMillis(),
+            productCount = totalImported
+        ))
+        Log.d("ProductRepository", "Imported ${preview.newProducts.size} new, updated ${if (updateDuplicates) preview.duplicateProducts.size else 0} duplicates")
     }
 
     suspend fun deleteCsvAndProducts(csvId: Int) = withContext(Dispatchers.IO) {

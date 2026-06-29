@@ -97,8 +97,53 @@ fun SearchEngineContent(
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             val fileName = it.lastPathSegment?.substringAfterLast("/") ?: "فایل ناشناس"
-            viewModel.importCsv(it, fileName)
+            viewModel.previewCsv(it, fileName)
         }
+    }
+    val csvPreview by viewModel.csvPreview.collectAsState()
+
+    csvPreview?.let { preview ->
+        AlertDialog(
+            onDismissRequest = { viewModel.cancelImport() },
+            containerColor = GeoInactivePillBg,
+            shape = RoundedCornerShape(16.dp),
+            title = { Text("بررسی فایل CSV", fontWeight = FontWeight.Bold, color = GeoText) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("فایل: ${preview.fileName}", fontSize = 13.sp, color = GeoText)
+                    Text("محصولات جدید: ${preview.newProducts.size}", fontSize = 13.sp, color = GeoPrimary)
+                    if (preview.duplicateProducts.isNotEmpty()) {
+                        Text("محصولات تکراری: ${preview.duplicateProducts.size}", fontSize = 13.sp, color = Color.Red)
+                        Text("قیمت محصولات تکراری بروزرسانی بشه؟", fontSize = 13.sp, color = GeoText)
+                    }
+                }
+            },
+            confirmButton = {
+                if (preview.duplicateProducts.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { viewModel.confirmImport(true) },
+                            colors = ButtonDefaults.buttonColors(containerColor = GeoPrimary),
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("بله، بروزرسانی کن", color = Color.White) }
+                        OutlinedButton(
+                            onClick = { viewModel.confirmImport(false) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("فقط محصولات جدید اضافه کن") }
+                        TextButton(
+                            onClick = { viewModel.cancelImport() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("انصراف", color = GeoMutedText) }
+                    }
+                } else {
+                    Button(
+                        onClick = { viewModel.confirmImport(false) },
+                        colors = ButtonDefaults.buttonColors(containerColor = GeoPrimary)
+                    ) { Text("تایید و import", color = Color.White) }
+                }
+            },
+            dismissButton = {}
+        )
     }
     val DUMMY = listOf(
         Product(3001, "بلبرینگ چرخ جلو پژو405", "PSN", "17,100,500", 17100500),

@@ -26,4 +26,13 @@ interface ProductDao {
 
     @Query("SELECT COUNT(*) FROM products")
     suspend fun getCount(): Int
+
+    @Query("SELECT id FROM products WHERE id IN (:ids)")
+    suspend fun getExistingIds(ids: List<Int>): List<Int>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAllIgnore(products: List<ProductEntity>)
+
+    @Query("UPDATE products SET price = :price, priceNumeric = :priceNumeric WHERE id = :id")
+    suspend fun updatePrice(id: Int, price: String, priceNumeric: Long)
 }
