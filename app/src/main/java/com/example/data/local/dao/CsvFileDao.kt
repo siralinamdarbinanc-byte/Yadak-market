@@ -14,4 +14,7 @@ interface CsvFileDao {
 
     @Query("DELETE FROM csv_files WHERE id = :csvId")
     suspend fun deleteById(csvId: Int)
+
+    @Query("DELETE FROM csv_files")
+    suspend fun deleteAll()
 }

@@ -30,7 +30,7 @@ class ProductRepository(
     fun getAllCsvFiles() = csvFileDao.getAllCsvFiles()
 
     suspend fun checkAndSeedDatabase() = withContext(Dispatchers.IO) {
-        val CSV_VERSION = 3
+        val CSV_VERSION = 4
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val savedVersion = prefs.getInt("csv_version", 0)
         if (savedVersion >= CSV_VERSION) return@withContext
@@ -43,38 +43,44 @@ class ProductRepository(
         }
     }
 
-    // مرحله ۱: فقط بخون و چک کن
+    // مرحله ۱: بخون و چک تکراری بر اساس نام
     suspend fun previewCsv(uri: Uri, fileName: String): CsvPreview? = withContext(Dispatchers.IO) {
         try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext null
             val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
             reader.readLine()
-            val products = mutableListOf<ProductEntity>()
+            val parsed = mutableListOf<Triple<String, String, Pair<String, Long>>>() // name, brand, (price,priceNumeric)
             var line: String?
             while (reader.readLine().also { line = it } != null) {
                 val row = line ?: continue
                 if (row.isBlank()) continue
                 val tokens = parseCsvLine(row)
                 if (tokens.size >= 4) {
-                    val id = tokens[0].toIntOrNull() ?: continue
-                    val name = tokens[1]
-                    val brand = tokens[2]
+                    val name = tokens[1].trim()
+                    val brand = tokens[2].trim()
                     val price = tokens[3]
                     val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
-                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric, csvId = 0))
+                    if (name.isNotBlank()) {
+                        parsed.add(Triple(name, brand, Pair(price.replace("\"", ""), priceNumeric)))
+                    }
                 }
             }
             reader.close()
 
             // ثبت CSV
-            val csvRecord = CsvFileEntity(fileName = fileName, importedAt = System.currentTimeMillis(), productCount = products.size)
+            val csvRecord = CsvFileEntity(fileName = fileName, importedAt = System.currentTimeMillis(), productCount = parsed.size)
             val csvId = csvFileDao.insert(csvRecord).toInt()
 
-            // چک تکراری
-            val allIds = products.map { it.id }
-            val existingIds = productDao.getExistingIds(allIds).toSet()
-            val newProducts = products.filter { it.id !in existingIds }.map { it.copy(csvId = csvId) }
-            val duplicates = products.filter { it.id in existingIds }
+            // چک تکراری بر اساس نام
+            val allNames = parsed.map { it.first }
+            val existingNames = productDao.getExistingNames(allNames).toSet()
+
+            val newProducts = parsed.filter { it.first !in existingNames }.map {
+                ProductEntity(name = it.first, brand = it.second, price = it.third.first, priceNumeric = it.third.second, csvId = csvId)
+            }
+            val duplicates = parsed.filter { it.first in existingNames }.map {
+                ProductEntity(name = it.first, brand = it.second, price = it.third.first, priceNumeric = it.third.second, csvId = csvId)
+            }
 
             CsvPreview(newProducts, duplicates, fileName, csvId)
         } catch (e: Exception) {
@@ -83,19 +89,16 @@ class ProductRepository(
         }
     }
 
-    // مرحله ۲: import با تصمیم کاربر
+    // مرحله ۲: import نهایی
     suspend fun confirmImport(preview: CsvPreview, updateDuplicates: Boolean) = withContext(Dispatchers.IO) {
-        // محصولات جدید رو اضافه کن
         if (preview.newProducts.isNotEmpty()) {
             productDao.insertAllIgnore(preview.newProducts)
         }
-        // اگه کاربر بله زد، قیمت تکراری‌ها رو آپدیت کن
         if (updateDuplicates) {
             preview.duplicateProducts.forEach { product ->
-                productDao.updatePrice(product.id, product.price, product.priceNumeric)
+                productDao.updatePriceByName(product.name, product.price, product.priceNumeric)
             }
         }
-        // آپدیت تعداد محصولات توی csv_files
         val totalImported = preview.newProducts.size + if (updateDuplicates) preview.duplicateProducts.size else 0
         csvFileDao.insert(CsvFileEntity(
             id = preview.csvId,
@@ -111,6 +114,15 @@ class ProductRepository(
         csvFileDao.deleteById(csvId)
     }
 
+    // پاک کردن کامل دیتابیس (محصولات + لیست CSV ها)
+    suspend fun clearAllData() = withContext(Dispatchers.IO) {
+        productDao.deleteAll()
+        csvFileDao.deleteAll()
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.edit().remove("csv_version").apply()
+        Log.d("ProductRepository", "All data cleared.")
+    }
+
     private fun loadProductsFromCsv(): List<ProductEntity> {
         val products = mutableListOf<ProductEntity>()
         try {
@@ -123,12 +135,13 @@ class ProductRepository(
                 if (row.isBlank()) continue
                 val tokens = parseCsvLine(row)
                 if (tokens.size >= 4) {
-                    val id = tokens[0].toIntOrNull() ?: continue
-                    val name = tokens[1]
-                    val brand = tokens[2]
+                    val name = tokens[1].trim()
+                    val brand = tokens[2].trim()
                     val price = tokens[3]
                     val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
-                    products.add(ProductEntity(id = id, name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric, csvId = 0))
+                    if (name.isNotBlank()) {
+                        products.add(ProductEntity(name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric, csvId = 0))
+                    }
                 }
             }
             reader.close()

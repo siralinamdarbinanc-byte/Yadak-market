@@ -131,4 +131,10 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
             repository.deleteCsvAndProducts(csvId)
         }
     }
+
+    fun clearAllData() {
+        viewModelScope.launch {
+            repository.clearAllData()
+        }
+    }
 }

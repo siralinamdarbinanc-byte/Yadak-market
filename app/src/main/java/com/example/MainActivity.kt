@@ -724,6 +724,7 @@ fun SearchEngineContent(
     if (showSettings) {
         val csvFiles by viewModel.csvFiles.collectAsState()
         var showDeleteConfirm by remember { mutableStateOf<Int?>(null) }
+        var showClearAllConfirm by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { onDismissSettings() },
@@ -746,6 +747,18 @@ fun SearchEngineContent(
                         Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("ورود CSV جدید", fontSize = 14.sp, color = Color.White)
+                    }
+
+                    OutlinedButton(
+                        onClick = { showClearAllConfirm = true },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                        border = BorderStroke(1.dp, Color.Red),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "clear all", modifier = Modifier.size(16.dp), tint = Color.Red)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("پاک کردن کامل دیتابیس", fontSize = 14.sp, color = Color.Red)
                     }
 
                     if (csvFiles.isNotEmpty()) {
@@ -780,6 +793,25 @@ fun SearchEngineContent(
             },
             confirmButton = {}
         )
+
+        if (showClearAllConfirm) {
+            AlertDialog(
+                onDismissRequest = { showClearAllConfirm = false },
+                containerColor = GeoInactivePillBg,
+                shape = RoundedCornerShape(16.dp),
+                title = { Text("پاک کردن کامل دیتابیس", fontWeight = FontWeight.Bold, color = GeoText) },
+                text = { Text("تمام محصولات و فایل‌های CSV ثبت‌شده حذف می‌شن. این کار قابل بازگشت نیست. مطمئنی؟", color = GeoText) },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.clearAllData(); showClearAllConfirm = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) { Text("بله، پاک کن", color = Color.White) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearAllConfirm = false }) { Text("انصراف", color = GeoPrimary) }
+                }
+            )
+        }
 
         showDeleteConfirm?.let { csvId ->
             AlertDialog(
