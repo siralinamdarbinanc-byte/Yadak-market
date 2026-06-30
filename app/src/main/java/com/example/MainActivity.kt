@@ -109,17 +109,52 @@ fun SearchEngineContent(
             shape = RoundedCornerShape(16.dp),
             title = { Text("بررسی فایل CSV", fontWeight = FontWeight.Bold, color = GeoText) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier.heightIn(max = 420.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text("فایل: ${preview.fileName}", fontSize = 13.sp, color = GeoText)
                     Text("محصولات جدید: ${preview.newProducts.size}", fontSize = 13.sp, color = GeoPrimary)
-                    if (preview.duplicateProducts.isNotEmpty()) {
-                        Text("محصولات تکراری: ${preview.duplicateProducts.size}", fontSize = 13.sp, color = Color.Red)
-                        Text("قیمت محصولات تکراری بروزرسانی بشه؟", fontSize = 13.sp, color = GeoText)
+
+                    if (preview.duplicateMatches.isNotEmpty()) {
+                        Text(
+                            text = "موارد مشترک (${preview.duplicateMatches.size}):",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f, fill = false)
+                                .heightIn(max = 260.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(preview.duplicateMatches) { match ->
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = GeoSearchBarBg),
+                                    border = BorderStroke(1.dp, GeoBorder),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(match.name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GeoText)
+                                        Text(match.brand, fontSize = 11.sp, color = Color.Red)
+                                        Text(
+                                            text = "${match.oldPrice} ← ${match.newPrice}",
+                                            fontSize = 11.sp,
+                                            color = if (match.oldPriceNumeric != match.newPriceNumeric) GeoPrimary else GeoMutedText
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Text("قیمت موارد بالا بروزرسانی بشه؟", fontSize = 13.sp, color = GeoText)
                     }
                 }
             },
             confirmButton = {
-                if (preview.duplicateProducts.isNotEmpty()) {
+                if (preview.duplicateMatches.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = { viewModel.confirmImport(true) },

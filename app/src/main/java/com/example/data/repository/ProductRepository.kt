@@ -13,9 +13,18 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
+data class DuplicateMatch(
+    val name: String,
+    val brand: String,
+    val oldPrice: String,
+    val newPrice: String,
+    val oldPriceNumeric: Long,
+    val newPriceNumeric: Long
+)
+
 data class CsvPreview(
     val newProducts: List<ProductEntity>,
-    val duplicateProducts: List<ProductEntity>,
+    val duplicateMatches: List<DuplicateMatch>,
     val fileName: String,
     val csvId: Int
 )
@@ -43,13 +52,14 @@ class ProductRepository(
         }
     }
 
-    // مرحله ۱: بخون و چک تکراری بر اساس نام
+    // مرحله ۱: بخون و چک تکراری بر اساس نام + برند
     suspend fun previewCsv(uri: Uri, fileName: String): CsvPreview? = withContext(Dispatchers.IO) {
         try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext null
             val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
             reader.readLine()
-            val parsed = mutableListOf<Triple<String, String, Pair<String, Long>>>() // name, brand, (price,priceNumeric)
+            data class Parsed(val name: String, val brand: String, val price: String, val priceNumeric: Long)
+            val parsed = mutableListOf<Parsed>()
             var line: String?
             while (reader.readLine().also { line = it } != null) {
                 val row = line ?: continue
@@ -58,10 +68,11 @@ class ProductRepository(
                 if (tokens.size >= 4) {
                     val name = tokens[1].trim()
                     val brand = tokens[2].trim()
-                    val price = tokens[3]
-                    val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
+                    val priceRaw = tokens[3]
+                    val priceClean = priceRaw.replace("\"", "").trim()
+                    val priceNumeric = priceClean.replace(",", "").toLongOrNull() ?: 0L
                     if (name.isNotBlank()) {
-                        parsed.add(Triple(name, brand, Pair(price.replace("\"", ""), priceNumeric)))
+                        parsed.add(Parsed(name, brand, priceClean, priceNumeric))
                     }
                 }
             }
@@ -71,18 +82,35 @@ class ProductRepository(
             val csvRecord = CsvFileEntity(fileName = fileName, importedAt = System.currentTimeMillis(), productCount = parsed.size)
             val csvId = csvFileDao.insert(csvRecord).toInt()
 
-            // چک تکراری بر اساس نام
-            val allNames = parsed.map { it.first }
-            val existingNames = productDao.getExistingNames(allNames).toSet()
+            // چک تکراری بر اساس نام + برند
+            val names = parsed.map { it.name }
+            val brands = parsed.map { it.brand }
+            val existing = productDao.getExistingByNameAndBrand(names, brands)
+            val existingMap = existing.associateBy { it.name to it.brand }
 
-            val newProducts = parsed.filter { it.first !in existingNames }.map {
-                ProductEntity(name = it.first, brand = it.second, price = it.third.first, priceNumeric = it.third.second, csvId = csvId)
-            }
-            val duplicates = parsed.filter { it.first in existingNames }.map {
-                ProductEntity(name = it.first, brand = it.second, price = it.third.first, priceNumeric = it.third.second, csvId = csvId)
+            val newProducts = mutableListOf<ProductEntity>()
+            val duplicateMatches = mutableListOf<DuplicateMatch>()
+
+            parsed.forEach { p ->
+                val key = p.name to p.brand
+                val existingProduct = existingMap[key]
+                if (existingProduct != null) {
+                    duplicateMatches.add(
+                        DuplicateMatch(
+                            name = p.name,
+                            brand = p.brand,
+                            oldPrice = existingProduct.price,
+                            newPrice = p.price,
+                            oldPriceNumeric = existingProduct.priceNumeric,
+                            newPriceNumeric = p.priceNumeric
+                        )
+                    )
+                } else {
+                    newProducts.add(ProductEntity(name = p.name, brand = p.brand, price = p.price, priceNumeric = p.priceNumeric, csvId = csvId))
+                }
             }
 
-            CsvPreview(newProducts, duplicates, fileName, csvId)
+            CsvPreview(newProducts, duplicateMatches, fileName, csvId)
         } catch (e: Exception) {
             Log.e("ProductRepository", "Error previewing CSV", e)
             null
@@ -95,18 +123,18 @@ class ProductRepository(
             productDao.insertAllIgnore(preview.newProducts)
         }
         if (updateDuplicates) {
-            preview.duplicateProducts.forEach { product ->
-                productDao.updatePriceByName(product.name, product.price, product.priceNumeric)
+            preview.duplicateMatches.forEach { match ->
+                productDao.updatePriceByNameAndBrand(match.name, match.brand, match.newPrice, match.newPriceNumeric)
             }
         }
-        val totalImported = preview.newProducts.size + if (updateDuplicates) preview.duplicateProducts.size else 0
+        val totalImported = preview.newProducts.size + if (updateDuplicates) preview.duplicateMatches.size else 0
         csvFileDao.insert(CsvFileEntity(
             id = preview.csvId,
             fileName = preview.fileName,
             importedAt = System.currentTimeMillis(),
             productCount = totalImported
         ))
-        Log.d("ProductRepository", "Imported ${preview.newProducts.size} new, updated ${if (updateDuplicates) preview.duplicateProducts.size else 0} duplicates")
+        Log.d("ProductRepository", "Imported ${preview.newProducts.size} new, updated ${if (updateDuplicates) preview.duplicateMatches.size else 0} duplicates")
     }
 
     suspend fun deleteCsvAndProducts(csvId: Int) = withContext(Dispatchers.IO) {
@@ -114,7 +142,6 @@ class ProductRepository(
         csvFileDao.deleteById(csvId)
     }
 
-    // پاک کردن کامل دیتابیس (محصولات + لیست CSV ها)
     suspend fun clearAllData() = withContext(Dispatchers.IO) {
         productDao.deleteAll()
         csvFileDao.deleteAll()
@@ -137,10 +164,11 @@ class ProductRepository(
                 if (tokens.size >= 4) {
                     val name = tokens[1].trim()
                     val brand = tokens[2].trim()
-                    val price = tokens[3]
-                    val priceNumeric = price.replace("\"", "").replace(",", "").trim().toLongOrNull() ?: 0L
+                    val priceRaw = tokens[3]
+                    val priceClean = priceRaw.replace("\"", "").trim()
+                    val priceNumeric = priceClean.replace(",", "").toLongOrNull() ?: 0L
                     if (name.isNotBlank()) {
-                        products.add(ProductEntity(name = name, brand = brand, price = price.replace("\"", ""), priceNumeric = priceNumeric, csvId = 0))
+                        products.add(ProductEntity(name = name, brand = brand, price = priceClean, priceNumeric = priceNumeric, csvId = 0))
                     }
                 }
             }

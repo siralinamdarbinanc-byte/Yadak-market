@@ -27,12 +27,12 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products")
     suspend fun getCount(): Int
 
-    @Query("SELECT name FROM products WHERE name IN (:names)")
-    suspend fun getExistingNames(names: List<String>): List<String>
+    @Query("SELECT * FROM products WHERE name IN (:names) AND brand IN (:brands)")
+    suspend fun getExistingByNameAndBrand(names: List<String>, brands: List<String>): List<ProductEntity>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAllIgnore(products: List<ProductEntity>)
 
-    @Query("UPDATE products SET price = :price, priceNumeric = :priceNumeric WHERE name = :name")
-    suspend fun updatePriceByName(name: String, price: String, priceNumeric: Long)
+    @Query("UPDATE products SET price = :price, priceNumeric = :priceNumeric WHERE name = :name AND brand = :brand")
+    suspend fun updatePriceByNameAndBrand(name: String, brand: String, price: String, priceNumeric: Long)
 }
