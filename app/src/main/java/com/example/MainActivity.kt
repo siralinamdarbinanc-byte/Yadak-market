@@ -75,6 +75,44 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// ----- مدیریت درصد مارک‌آپ (عمومی + بر اساس برند) -----
+fun getGeneralMarkupPercent(context: android.content.Context): Int {
+    val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+    return prefs.getInt("markup_general", 0)
+}
+
+fun setGeneralMarkupPercent(context: android.content.Context, percent: Int) {
+    val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+    prefs.edit().putInt("markup_general", percent).apply()
+}
+
+fun getBrandMarkupMap(context: android.content.Context): Map<String, Int> {
+    val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+    val raw = prefs.getString("markup_by_brand", "") ?: ""
+    if (raw.isBlank()) return emptyMap()
+    return raw.split("||").mapNotNull { entry ->
+        val parts = entry.split("::")
+        if (parts.size == 2) {
+            val percent = parts[1].toIntOrNull()
+            if (percent != null) parts[0] to percent else null
+        } else null
+    }.toMap()
+}
+
+fun setBrandMarkupMap(context: android.content.Context, map: Map<String, Int>) {
+    val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+    val raw = map.entries.joinToString("||") { "${it.key}::${it.value}" }
+    prefs.edit().putString("markup_by_brand", raw).apply()
+}
+
+// محاسبه قیمت نمایشی نهایی: قانون قدیمی (زیر 80000 ضربدر 1.4) + درصد مارک‌آپ (عمومی یا برند-محور)
+fun calculateDisplayPrice(numericPrice: Long, brand: String, generalPercent: Int, brandMarkupMap: Map<String, Int>): Long {
+    val rawPrice = if (numericPrice < 80000) (numericPrice * 1.4).toLong() else numericPrice
+    val percent = brandMarkupMap[brand] ?: generalPercent
+    val withMarkup = rawPrice + (rawPrice * percent / 100)
+    return (withMarkup / 1000 + if (withMarkup % 1000 > 0) 1 else 0) * 1000
+}
+
 // Data model parsed from CSV
 data class Product(
     val row: Int,
@@ -796,6 +834,86 @@ fun SearchEngineContent(
                         Text("پاک کردن کامل دیتابیس", fontSize = 14.sp, color = Color.Red)
                     }
 
+                    HorizontalDivider(color = GeoBorder)
+
+                    val settingsContext = androidx.compose.ui.platform.LocalContext.current
+                    var generalMarkupInput by remember { mutableStateOf(getGeneralMarkupPercent(settingsContext).toString()) }
+                    var brandMarkupMap by remember { mutableStateOf(getBrandMarkupMap(settingsContext)) }
+                    var selectedBrandsForMarkup by remember { mutableStateOf(brandMarkupMap.keys) }
+                    val allBrandsForMarkup by viewModel.availableBrands.collectAsState()
+
+                    Text("درصد مارک‌آپ روی قیمت‌ها:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
+
+                    OutlinedTextField(
+                        value = generalMarkupInput,
+                        onValueChange = {
+                            generalMarkupInput = it.filter { c -> c.isDigit() }
+                            setGeneralMarkupPercent(settingsContext, generalMarkupInput.toIntOrNull() ?: 0)
+                        },
+                        label = { Text("درصد عمومی (همه برندها)", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GeoPrimary,
+                            unfocusedBorderColor = GeoBorder
+                        )
+                    )
+
+                    Text("یا برای برند خاص درصد متفاوت بذار:", fontSize = 12.sp, color = GeoMutedText)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        allBrandsForMarkup.filter { it != "همه برندها" }.forEach { brandName ->
+                            val isSelected = selectedBrandsForMarkup.contains(brandName)
+                            Surface(
+                                onClick = {
+                                    selectedBrandsForMarkup = if (isSelected) {
+                                        selectedBrandsForMarkup - brandName
+                                    } else {
+                                        selectedBrandsForMarkup + brandName
+                                    }
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) GeoActivePillBg else GeoSearchBarBg,
+                                border = BorderStroke(1.dp, if (isSelected) GeoPrimary else GeoBorder)
+                            ) {
+                                Text(
+                                    text = brandName,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = if (isSelected) GeoActivePillText else GeoMutedText,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    selectedBrandsForMarkup.forEach { brandName ->
+                        var brandPercentInput by remember(brandName) {
+                            mutableStateOf((brandMarkupMap[brandName] ?: 0).toString())
+                        }
+                        OutlinedTextField(
+                            value = brandPercentInput,
+                            onValueChange = { newVal ->
+                                brandPercentInput = newVal.filter { c -> c.isDigit() }
+                                val updatedMap = brandMarkupMap.toMutableMap()
+                                updatedMap[brandName] = brandPercentInput.toIntOrNull() ?: 0
+                                brandMarkupMap = updatedMap
+                                setBrandMarkupMap(settingsContext, updatedMap)
+                            },
+                            label = { Text("درصد برای: $brandName", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = GeoPrimary,
+                                unfocusedBorderColor = GeoBorder
+                            )
+                        )
+                    }
+
                     if (csvFiles.isNotEmpty()) {
                         HorizontalDivider(color = GeoBorder)
                         Text("فایل‌های وارد شده:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
@@ -869,9 +987,11 @@ fun SearchEngineContent(
     }
     // Product Detail Dialog
     selectedProduct?.let { product ->
+        val contextForDialog = androidx.compose.ui.platform.LocalContext.current
         val df2 = DecimalFormat("#,###")
-        val rawPrice2 = if (product.numericPrice < 80000) (product.numericPrice * 1.4).toLong() else product.numericPrice
-        val roundedPrice2 = (rawPrice2 / 1000 + if (rawPrice2 % 1000 > 0) 1 else 0) * 1000
+        val generalPercent2 = remember { getGeneralMarkupPercent(contextForDialog) }
+        val brandMarkupMap2 = remember { getBrandMarkupMap(contextForDialog) }
+        val roundedPrice2 = calculateDisplayPrice(product.numericPrice, product.brand, generalPercent2, brandMarkupMap2)
         AlertDialog(
             onDismissRequest = { selectedProduct = null },
             containerColor = GeoInactivePillBg,
@@ -927,9 +1047,11 @@ fun SearchEngineContent(
 
 @Composable
 fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {}) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val df = DecimalFormat("#,###")
-    val rawPrice = if (product.numericPrice < 80000) (product.numericPrice * 1.4).toLong() else product.numericPrice
-    val roundedPrice = (rawPrice / 1000 + if (rawPrice % 1000 > 0) 1 else 0) * 1000
+    val generalPercent = remember { getGeneralMarkupPercent(context) }
+    val brandMarkupMap = remember { getBrandMarkupMap(context) }
+    val roundedPrice = calculateDisplayPrice(product.numericPrice, product.brand, generalPercent, brandMarkupMap)
     val displayPriceToman = df.format(roundedPrice)
 
     Card(
