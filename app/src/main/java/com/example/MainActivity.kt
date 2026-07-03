@@ -67,13 +67,11 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
-                        bottomBar = { BottomNavBar(onSettingsClick = { showSettings = true }) },
-                        floatingActionButton = {
-                            androidx.compose.material3.FloatingActionButton(
-                                onClick = { showDebugWebView = true }
-                            ) {
-                                Text("D")
-                            }
+                        bottomBar = {
+                            BottomNavBar(
+                                onSettingsClick = { showSettings = true },
+                                onCategoriesClick = { showDebugWebView = true }
+                            )
                         }
                     ) { innerPadding ->
                         SearchEngineContent(
@@ -1163,7 +1161,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
 }
 
 @Composable
-fun BottomNavBar(onSettingsClick: () -> Unit = {}) {
+fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit = {}) {
     NavigationBar(
         containerColor = GeoBottomNavBg,
         tonalElevation = 8.dp,
@@ -1193,7 +1191,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}) {
 
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = { onCategoriesClick() },
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Category,
