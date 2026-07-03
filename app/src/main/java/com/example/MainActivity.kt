@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.ui.viewinterop.AndroidView
 import android.annotation.SuppressLint
@@ -1299,12 +1300,16 @@ object BoxArrangement {
 fun DebugNetworkScreen(onBack: () -> Unit) {
     val loggedUrls = remember { mutableStateListOf<String>() }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
         Button(onClick = onBack) { Text("برگشت") }
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(4f),
             factory = { context ->
                 android.webkit.WebView(context).apply {
                     settings.javaScriptEnabled = true
