@@ -1,5 +1,8 @@
 package com.example
 
+import androidx.compose.material3.Button
+import androidx.compose.ui.viewinterop.AndroidView
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import android.net.Uri
@@ -58,17 +61,29 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 var showSettings by remember { mutableStateOf(false) }
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = { BottomNavBar(onSettingsClick = { showSettings = true }) }
-                ) { innerPadding ->
-                    SearchEngineContent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        showSettings = showSettings,
-                        onDismissSettings = { showSettings = false }
-                    )
+                var showDebugWebView by remember { mutableStateOf(false) }
+                if (showDebugWebView) {
+                    DebugNetworkScreen(onBack = { showDebugWebView = false })
+                } else {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        bottomBar = { BottomNavBar(onSettingsClick = { showSettings = true }) },
+                        floatingActionButton = {
+                            androidx.compose.material3.FloatingActionButton(
+                                onClick = { showDebugWebView = true }
+                            ) {
+                                Text("D")
+                            }
+                        }
+                    ) { innerPadding ->
+                        SearchEngineContent(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                            showSettings = showSettings,
+                            onDismissSettings = { showSettings = false }
+                        )
+                    }
                 }
             }
         }
@@ -1279,4 +1294,47 @@ fun HeaderSearchBar(
 // Quick arrangement helper for layout
 object BoxArrangement {
     val SpaceBetween = Arrangement.SpaceBetween
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun DebugNetworkScreen(onBack: () -> Unit) {
+    val loggedUrls = remember { mutableStateListOf<String>() }
+
+    Column(Modifier.fillMaxSize()) {
+        Button(onClick = onBack) { Text("برگشت") }
+        AndroidView(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            factory = { context ->
+                android.webkit.WebView(context).apply {
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    webViewClient = object : android.webkit.WebViewClient() {
+                        override fun shouldInterceptRequest(
+                            view: android.webkit.WebView,
+                            request: android.webkit.WebResourceRequest
+                        ): android.webkit.WebResourceResponse? {
+                            val url = request.url.toString()
+                            if (!url.contains(".js") && !url.contains(".css") &&
+                                !url.contains(".png") && !url.contains(".jpg") &&
+                                !url.contains(".woff") && !url.contains(".ico") &&
+                                !url.contains("googletagmanager") && !url.contains("chat.css")
+                            ) {
+                                loggedUrls.add(0, url)
+                            }
+                            return super.shouldInterceptRequest(view, request)
+                        }
+                    }
+                    loadUrl("https://www.isaco.ir/%D9%82%D8%B7%D8%B9%D8%A7%D8%AA/06703/%D8%AF%DB%8C%D8%B3%DA%A9-%DA%A9%D9%84%D8%A7%DA%86-%D9%85%D8%B1%DA%A9%D8%A8")
+                }
+            }
+        )
+        LazyColumn(Modifier.weight(1f)) {
+            items(loggedUrls) { url ->
+                Text(url, modifier = Modifier.padding(6.dp), fontSize = 10.sp)
+            }
+        }
+    }
 }
