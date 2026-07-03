@@ -1,5 +1,8 @@
 package com.example
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.ui.viewinterop.AndroidView
@@ -63,15 +66,21 @@ class MainActivity : ComponentActivity() {
             MyApplicationTheme {
                 var showSettings by remember { mutableStateOf(false) }
                 var showDebugWebView by remember { mutableStateOf(false) }
+                var showCategoriesScreen by remember { mutableStateOf(false) }
                 if (showDebugWebView) {
                     DebugNetworkScreen(onBack = { showDebugWebView = false })
+                } else if (showCategoriesScreen) {
+                    CategoriesScreen(
+                        onBack = { showCategoriesScreen = false },
+                        onIranKhodroClick = { showDebugWebView = true }
+                    )
                 } else {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = {
                             BottomNavBar(
                                 onSettingsClick = { showSettings = true },
-                                onCategoriesClick = { showDebugWebView = true }
+                                onCategoriesClick = { showCategoriesScreen = true }
                             )
                         }
                     ) { innerPadding ->
@@ -1309,7 +1318,7 @@ fun DebugNetworkScreen(onBack: () -> Unit) {
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(4f),
+                .weight(6f),
             factory = { context ->
                 android.webkit.WebView(context).apply {
                     settings.javaScriptEnabled = true
@@ -1330,7 +1339,7 @@ fun DebugNetworkScreen(onBack: () -> Unit) {
                             return super.shouldInterceptRequest(view, request)
                         }
                     }
-                    loadUrl("https://www.isaco.ir/%D9%82%D8%B7%D8%B9%D8%A7%D8%AA/06703/%D8%AF%DB%8C%D8%B3%DA%A9-%DA%A9%D9%84%D8%A7%DA%86-%D9%85%D8%B1%DA%A9%D8%A8")
+                    loadUrl("https://www.isaco.ir/%D9%82%D8%B7%D8%B9%D8%A7%D8%AA")
                 }
             }
         )
@@ -1338,6 +1347,27 @@ fun DebugNetworkScreen(onBack: () -> Unit) {
             items(loggedUrls) { url ->
                 Text(url, modifier = Modifier.padding(6.dp), fontSize = 10.sp)
             }
+        }
+    }
+}
+
+@Composable
+fun CategoriesScreen(onBack: () -> Unit, onIranKhodroClick: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(16.dp)
+    ) {
+        Button(onClick = onBack) { Text("برگشت") }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("انتخاب برند", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onIranKhodroClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("ایران خودرو")
         }
     }
 }
