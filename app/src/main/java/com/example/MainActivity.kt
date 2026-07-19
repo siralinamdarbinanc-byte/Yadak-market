@@ -1350,7 +1350,7 @@ fun DebugNetworkScreen(onBack: () -> Unit) {
                             return super.shouldInterceptRequest(view, request)
                         }
                     }
-                    loadUrl("https://www.isaco.ir/%D9%82%D8%B7%D8%B9%D8%A7%D8%AA")
+                    loadUrl("https://isaco.ir/%D9%82%D8%B7%D8%B9%D8%A7%D8%AA")
                 }
             }
         )
