@@ -12,17 +12,17 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme =
   darkColorScheme(
-    primary = GeoPrimary,
-    secondary = GeoActivePillBg,
-    tertiary = GeoAccentText,
-    background = GeoBg,
-    surface = GeoInactivePillBg,
-    onPrimary = androidx.compose.ui.graphics.Color.White,
-    onSecondary = GeoActivePillText,
-    onBackground = GeoText,
-    onSurface = GeoText,
-    primaryContainer = GeoActivePillBg,
-    onPrimaryContainer = GeoActivePillText
+    primary = GeoPrimaryDark,
+    secondary = GeoActivePillBgDark,
+    tertiary = GeoAccentTextDark,
+    background = GeoBgDark,
+    surface = GeoInactivePillBgDark,
+    onPrimary = androidx.compose.ui.graphics.Color.Black,
+    onSecondary = GeoActivePillTextDark,
+    onBackground = GeoTextDark,
+    onSurface = GeoTextDark,
+    primaryContainer = GeoActivePillBgDark,
+    onPrimaryContainer = GeoActivePillTextDark
   )
 
 private val LightColorScheme =

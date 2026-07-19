@@ -25,3 +25,17 @@ val GeoAccentText = Color(0xFF21005D)
 val GeoBottomNavBg = Color(0xFFF3EDF7)
 val GeoPillBorder = Color(0xFF79747E)
 
+// Dark Theme Colors
+val GeoBgDark = Color(0xFF1C1B1F)
+val GeoTextDark = Color(0xFFE6E1E5)
+val GeoPrimaryDark = Color(0xFFD0BCFF)
+val GeoActivePillBgDark = Color(0xFF4A4458)
+val GeoActivePillTextDark = Color(0xFFEADDFF)
+val GeoInactivePillBgDark = Color(0xFF2B2930)
+val GeoMutedTextDark = Color(0xFFCAC4D0)
+val GeoSearchBarBgDark = Color(0xFF322F37)
+val GeoBorderDark = Color(0xFF49454F)
+val GeoAccentBgDark = Color(0xFF4F378B)
+val GeoAccentTextDark = Color(0xFFEADDFF)
+val GeoBottomNavBgDark = Color(0xFF2B2930)
+

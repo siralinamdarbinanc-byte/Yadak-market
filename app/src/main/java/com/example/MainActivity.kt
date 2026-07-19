@@ -26,6 +26,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,7 +68,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+            var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
+            MyApplicationTheme(darkTheme = isDarkTheme) {
                 var showSettings by remember { mutableStateOf(false) }
                 var showDebugWebView by remember { mutableStateOf(false) }
                 var showCategoriesScreen by remember { mutableStateOf(false) }
@@ -90,7 +97,12 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .padding(innerPadding),
                             showSettings = showSettings,
-                            onDismissSettings = { showSettings = false }
+                            onDismissSettings = { showSettings = false },
+                            isDarkTheme = isDarkTheme,
+                            onThemeToggle = { newVal ->
+                                isDarkTheme = newVal
+                                prefs.edit().putBoolean("dark_theme", newVal).apply()
+                            }
                         )
                     }
                 }
@@ -151,7 +163,9 @@ fun SearchEngineContent(
     modifier: Modifier = Modifier,
     viewModel: ProductViewModel = viewModel(),
     showSettings: Boolean = false,
-    onDismissSettings: () -> Unit = {}
+    onDismissSettings: () -> Unit = {},
+    isDarkTheme: Boolean = false,
+    onThemeToggle: (Boolean) -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
@@ -822,6 +836,7 @@ fun SearchEngineContent(
         val csvFiles by viewModel.csvFiles.collectAsState()
         var showDeleteConfirm by remember { mutableStateOf<Int?>(null) }
         var showClearAllConfirm by remember { mutableStateOf(false) }
+        val settingsContext2 = androidx.compose.ui.platform.LocalContext.current
 
         AlertDialog(
             onDismissRequest = { onDismissSettings() },
@@ -866,6 +881,29 @@ fun SearchEngineContent(
                     ) {
                         Text("تعداد کل کالاهای وارد شده:", fontSize = 13.sp, color = GeoMutedText)
                         Text("$totalProducts کالا", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoPrimary)
+                    }
+
+                    HorizontalDivider(color = GeoBorder)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(
+                                if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
+                                contentDescription = "تم",
+                                tint = GeoPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(if (isDarkTheme) "تم تاریک" else "تم روشن", fontSize = 13.sp, color = GeoText)
+                        }
+                        Switch(
+                            checked = isDarkTheme,
+                            onCheckedChange = { onThemeToggle(it) },
+                            colors = SwitchDefaults.colors(checkedThumbColor = GeoPrimary, checkedTrackColor = GeoActivePillBg)
+                        )
                     }
 
                     HorizontalDivider(color = GeoBorder)
