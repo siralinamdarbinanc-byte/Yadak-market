@@ -858,6 +858,16 @@ fun SearchEngineContent(
                         Text("پاک کردن کامل دیتابیس", fontSize = 14.sp, color = Color.Red)
                     }
 
+                    val totalProducts = csvFiles.sumOf { it.productCount }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("تعداد کل کالاهای وارد شده:", fontSize = 13.sp, color = GeoMutedText)
+                        Text("$totalProducts کالا", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoPrimary)
+                    }
+
                     HorizontalDivider(color = GeoBorder)
 
                     val settingsContext = androidx.compose.ui.platform.LocalContext.current
