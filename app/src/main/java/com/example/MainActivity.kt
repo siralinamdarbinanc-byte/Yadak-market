@@ -27,6 +27,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -208,7 +212,7 @@ fun SearchEngineContent(
                         ) {
                             items(preview.duplicateMatches) { match ->
                                 Card(
-                                    colors = CardDefaults.cardColors(containerColor = GeoSearchBarBg),
+                                    colors = CardDefaults.cardColors(containerColor = dynSearchBg),
                                     border = BorderStroke(1.dp, GeoBorder),
                                     shape = RoundedCornerShape(8.dp),
                                     modifier = Modifier.fillMaxWidth()
@@ -663,7 +667,7 @@ fun SearchEngineContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = GeoSearchBarBg),
+                colors = CardDefaults.cardColors(containerColor = dynSearchBg),
                 border = BorderStroke(1.dp, GeoBorder)
             ) {
                 Column(
@@ -683,14 +687,14 @@ fun SearchEngineContent(
                             Surface(
                                 onClick = { selectedCategory = category },
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) GeoActivePillBg else GeoSearchBarBg,
+                                color = if (isSelected) dynActivePillBg else dynSearchBg,
                                 border = BorderStroke(1.dp, if (isSelected) GeoPrimary else GeoBorder)
                             ) {
                                 Text(
                                     text = category,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = if (isSelected) GeoActivePillText else GeoMutedText,
+                                        color = if (isSelected) dynActivePillText else dynMuted,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
@@ -711,14 +715,14 @@ fun SearchEngineContent(
                             Surface(
                                 onClick = { selectedBrand = brand },
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) GeoActivePillBg else GeoSearchBarBg,
+                                color = if (isSelected) dynActivePillBg else dynSearchBg,
                                 border = BorderStroke(1.dp, if (isSelected) GeoPrimary else GeoBorder)
                             ) {
                                 Text(
                                     text = brand,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = if (isSelected) GeoActivePillText else GeoMutedText,
+                                        color = if (isSelected) dynActivePillText else dynMuted,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
@@ -837,162 +841,185 @@ fun SearchEngineContent(
         var showDeleteConfirm by remember { mutableStateOf<Int?>(null) }
         var showClearAllConfirm by remember { mutableStateOf(false) }
         val settingsContext2 = androidx.compose.ui.platform.LocalContext.current
+        val dynText = if (isDarkTheme) GeoTextDark else GeoText
+        val dynMuted = if (isDarkTheme) GeoMutedTextDark else GeoMutedText
+        val dynBorder = if (isDarkTheme) GeoBorderDark else GeoBorder
+        val dynSearchBg = if (isDarkTheme) GeoSearchBarBgDark else GeoSearchBarBg
+        val dynActivePillBg = if (isDarkTheme) GeoActivePillBgDark else GeoActivePillBg
+        val dynActivePillText = if (isDarkTheme) GeoActivePillTextDark else GeoActivePillText
+        val dynPrimary = if (isDarkTheme) GeoPrimaryDark else GeoPrimary
 
         AlertDialog(
             onDismissRequest = { onDismissSettings() },
-            containerColor = GeoInactivePillBg,
+            containerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg,
             shape = RoundedCornerShape(16.dp),
             title = {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "تنظیمات", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GeoText)
-                    IconButton(onClick = { onDismissSettings() }) { Icon(Icons.Default.Close, contentDescription = "بستن", tint = GeoText) }
+                    Text(text = "تنظیمات", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = dynText)
+                    IconButton(onClick = { onDismissSettings() }) { Icon(Icons.Default.Close, contentDescription = "بستن", tint = dynText) }
                 }
             },
             text = {
-                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
-                        onClick = { csvLauncher.launch("text/*") },
-                        colors = ButtonDefaults.buttonColors(containerColor = GeoPrimary),
+                val settingsContext = androidx.compose.ui.platform.LocalContext.current
+                val totalProducts = csvFiles.sumOf { it.productCount }
+                var generalMarkupInput by remember { mutableStateOf(getGeneralMarkupPercent(settingsContext).toString()) }
+                var brandMarkupMap by remember { mutableStateOf(getBrandMarkupMap(settingsContext)) }
+                var selectedBrandsForMarkup by remember { mutableStateOf(brandMarkupMap.keys) }
+                val allBrandsForMarkup by viewModel.availableBrands.collectAsState()
+
+                var expandedData by remember { mutableStateOf(true) }
+                var expandedTheme by remember { mutableStateOf(false) }
+                var expandedMarkup by remember { mutableStateOf(false) }
+                var expandedFiles by remember { mutableStateOf(false) }
+
+                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                    // ---- بخش ۱: مدیریت داده ----
+                    Surface(
+                        onClick = { expandedData = !expandedData },
                         shape = RoundedCornerShape(10.dp),
+                        color = dynSearchBg,
+                        border = BorderStroke(1.dp, dynBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("ورود CSV جدید", fontSize = 14.sp, color = Color.White)
-                    }
-
-                    OutlinedButton(
-                        onClick = { showClearAllConfirm = true },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
-                        border = BorderStroke(1.dp, Color.Red),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = "clear all", modifier = Modifier.size(16.dp), tint = Color.Red)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("پاک کردن کامل دیتابیس", fontSize = 14.sp, color = Color.Red)
-                    }
-
-                    val totalProducts = csvFiles.sumOf { it.productCount }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("تعداد کل کالاهای وارد شده:", fontSize = 13.sp, color = GeoMutedText)
-                        Text("$totalProducts کالا", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoPrimary)
-                    }
-
-                    HorizontalDivider(color = GeoBorder)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(
-                                if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
-                                contentDescription = "تم",
-                                tint = GeoPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(if (isDarkTheme) "تم تاریک" else "تم روشن", fontSize = 13.sp, color = GeoText)
+                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Storage, contentDescription = null, tint = dynPrimary, modifier = Modifier.size(18.dp))
+                                Text("مدیریت داده", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
+                            }
+                            Icon(if (expandedData) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = dynMuted)
                         }
-                        Switch(
-                            checked = isDarkTheme,
-                            onCheckedChange = { onThemeToggle(it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = GeoPrimary, checkedTrackColor = GeoActivePillBg)
-                        )
+                    }
+                    if (expandedData) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(start = 4.dp, end = 4.dp)) {
+                            Button(
+                                onClick = { csvLauncher.launch("text/*") },
+                                colors = ButtonDefaults.buttonColors(containerColor = dynPrimary),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.FileUpload, contentDescription = "import", modifier = Modifier.size(16.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("ورود CSV جدید", fontSize = 14.sp, color = Color.White)
+                            }
+                            OutlinedButton(
+                                onClick = { showClearAllConfirm = true },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                                border = BorderStroke(1.dp, Color.Red),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "clear all", modifier = Modifier.size(16.dp), tint = Color.Red)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("پاک کردن کامل دیتابیس", fontSize = 14.sp, color = Color.Red)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("تعداد کل کالاهای وارد شده:", fontSize = 13.sp, color = dynMuted)
+                                Text("$totalProducts کالا", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynPrimary)
+                            }
+                        }
                     }
 
-                    HorizontalDivider(color = GeoBorder)
-
-                    val settingsContext = androidx.compose.ui.platform.LocalContext.current
-                    var generalMarkupInput by remember { mutableStateOf(getGeneralMarkupPercent(settingsContext).toString()) }
-                    var brandMarkupMap by remember { mutableStateOf(getBrandMarkupMap(settingsContext)) }
-                    var selectedBrandsForMarkup by remember { mutableStateOf(brandMarkupMap.keys) }
-                    val allBrandsForMarkup by viewModel.availableBrands.collectAsState()
-
-                    Text("درصد مارک‌آپ روی قیمت‌ها:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
-
-                    OutlinedTextField(
-                        value = generalMarkupInput,
-                        onValueChange = {
-                            generalMarkupInput = it.filter { c -> c.isDigit() }
-                            setGeneralMarkupPercent(settingsContext, generalMarkupInput.toIntOrNull() ?: 0)
-                        },
-                        label = { Text("درصد عمومی (همه برندها)", fontSize = 11.sp) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = GeoPrimary,
-                            unfocusedBorderColor = GeoBorder
-                        )
-                    )
-
-                    Text("یا برای برند خاص درصد متفاوت بذار:", fontSize = 12.sp, color = GeoMutedText)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    // ---- بخش ۲: ظاهر ----
+                    Surface(
+                        onClick = { expandedTheme = !expandedTheme },
+                        shape = RoundedCornerShape(10.dp),
+                        color = dynSearchBg,
+                        border = BorderStroke(1.dp, dynBorder),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        allBrandsForMarkup.filter { it != "همه برندها" }.forEach { brandName ->
-                            val isSelected = selectedBrandsForMarkup.contains(brandName)
-                            Surface(
-                                onClick = {
-                                    selectedBrandsForMarkup = if (isSelected) {
-                                        selectedBrandsForMarkup - brandName
-                                    } else {
-                                        selectedBrandsForMarkup + brandName
-                                    }
+                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode, contentDescription = null, tint = dynPrimary, modifier = Modifier.size(18.dp))
+                                Text("ظاهر برنامه", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
+                            }
+                            Icon(if (expandedTheme) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = dynMuted)
+                        }
+                    }
+                    if (expandedTheme) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (isDarkTheme) "تم تاریک" else "تم روشن", fontSize = 13.sp, color = dynText)
+                            Switch(
+                                checked = isDarkTheme,
+                                onCheckedChange = { onThemeToggle(it) },
+                                colors = SwitchDefaults.colors(checkedThumbColor = dynPrimary, checkedTrackColor = dynActivePillBg)
+                            )
+                        }
+                    }
+
+                    // ---- بخش ۳: درصد مارک‌آپ ----
+                    Surface(
+                        onClick = { expandedMarkup = !expandedMarkup },
+                        shape = RoundedCornerShape(10.dp),
+                        color = dynSearchBg,
+                        border = BorderStroke(1.dp, dynBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Percent, contentDescription = null, tint = dynPrimary, modifier = Modifier.size(18.dp))
+                                Text("درصد مارک‌آپ", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
+                            }
+                            Icon(if (expandedMarkup) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null, tint = dynMuted)
+                        }
+                    }
+                    if (expandedMarkup) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(start = 4.dp, end = 4.dp)) {
+                            OutlinedTextField(
+                                value = generalMarkupInput,
+                                onValueChange = {
+                                    generalMarkupInput = it.filter { c -> c.isDigit() }
+                                    setGeneralMarkupPercent(settingsContext, generalMarkupInput.toIntOrNull() ?: 0)
                                 },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) GeoActivePillBg else GeoSearchBarBg,
-                                border = BorderStroke(1.dp, if (isSelected) GeoPrimary else GeoBorder)
-                            ) {
-                                Text(
-                                    text = brandName,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = if (isSelected) GeoActivePillText else GeoMutedText,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                label = { Text("درصد عمومی (همه برندها)", fontSize = 11.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = dynPrimary, unfocusedBorderColor = dynBorder)
+                            )
+                            Text("یا برای برند خاص درصد متفاوت بذار:", fontSize = 12.sp, color = dynMuted)
+                            Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                allBrandsForMarkup.filter { it != "همه برندها" }.forEach { brandName ->
+                                    val isSelected = selectedBrandsForMarkup.contains(brandName)
+                                    Surface(
+                                        onClick = {
+                                            selectedBrandsForMarkup = if (isSelected) selectedBrandsForMarkup - brandName else selectedBrandsForMarkup + brandName
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) dynActivePillBg else dynSearchBg,
+                                        border = BorderStroke(1.dp, if (isSelected) dynPrimary else dynBorder)
+                                    ) {
+                                        Text(text = brandName, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            style = MaterialTheme.typography.bodySmall.copy(color = if (isSelected) dynActivePillText else dynMuted, fontWeight = FontWeight.Bold))
+                                    }
+                                }
+                            }
+                            selectedBrandsForMarkup.forEach { brandName ->
+                                var brandPercentInput by remember(brandName) { mutableStateOf((brandMarkupMap[brandName] ?: 0).toString()) }
+                                OutlinedTextField(
+                                    value = brandPercentInput,
+                                    onValueChange = { newVal ->
+                                        brandPercentInput = newVal.filter { c -> c.isDigit() }
+                                        val updatedMap = brandMarkupMap.toMutableMap()
+                                        updatedMap[brandName] = brandPercentInput.toIntOrNull() ?: 0
+                                        brandMarkupMap = updatedMap
+                                        setBrandMarkupMap(settingsContext, updatedMap)
+                                    },
+                                    label = { Text("درصد برای: $brandName", fontSize = 11.sp) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = dynPrimary, unfocusedBorderColor = dynBorder)
                                 )
                             }
                         }
                     }
 
-                    selectedBrandsForMarkup.forEach { brandName ->
-                        var brandPercentInput by remember(brandName) {
-                            mutableStateOf((brandMarkupMap[brandName] ?: 0).toString())
-                        }
-                        OutlinedTextField(
-                            value = brandPercentInput,
-                            onValueChange = { newVal ->
-                                brandPercentInput = newVal.filter { c -> c.isDigit() }
-                                val updatedMap = brandMarkupMap.toMutableMap()
-                                updatedMap[brandName] = brandPercentInput.toIntOrNull() ?: 0
-                                brandMarkupMap = updatedMap
-                                setBrandMarkupMap(settingsContext, updatedMap)
-                            },
-                            label = { Text("درصد برای: $brandName", fontSize = 11.sp) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = GeoPrimary,
-                                unfocusedBorderColor = GeoBorder
-                            )
-                        )
-                    }
-
                     if (csvFiles.isNotEmpty()) {
                         HorizontalDivider(color = GeoBorder)
-                        Text("فایل‌های وارد شده:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
+                        Text("فایل‌های وارد شده:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
                         csvFiles.forEach { csv ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = GeoSearchBarBg),
+                                colors = CardDefaults.cardColors(containerColor = dynSearchBg),
                                 border = BorderStroke(1.dp, GeoBorder),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
@@ -1002,8 +1029,8 @@ fun SearchEngineContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = csv.fileName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = GeoText)
-                                        Text(text = "${csv.productCount} محصول", fontSize = 11.sp, color = GeoMutedText)
+                                        Text(text = csv.fileName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
+                                        Text(text = "${csv.productCount} محصول", fontSize = 11.sp, color = dynMuted)
                                     }
                                     IconButton(onClick = { showDeleteConfirm = csv.id }) {
                                         Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Color.Red)
@@ -1076,7 +1103,7 @@ fun SearchEngineContent(
                 ) {
                     Text(text = "جزئیات محصول", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GeoText)
                     IconButton(onClick = { selectedProduct = null }) {
-                        Icon(Icons.Default.Close, contentDescription = "بستن", tint = GeoText)
+                        Icon(Icons.Default.Close, contentDescription = "بستن", tint = dynText)
                     }
                 }
             },
