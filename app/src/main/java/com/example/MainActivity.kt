@@ -173,6 +173,13 @@ fun SearchEngineContent(
 ) {
     val focusManager = LocalFocusManager.current
     val allProducts by viewModel.uiState.collectAsState()
+    val dynText = if (isDarkTheme) GeoTextDark else GeoText
+    val dynMuted = if (isDarkTheme) GeoMutedTextDark else GeoMutedText
+    val dynBorder = if (isDarkTheme) GeoBorderDark else GeoBorder
+    val dynSearchBg = if (isDarkTheme) GeoSearchBarBgDark else GeoSearchBarBg
+    val dynActivePillBg = if (isDarkTheme) GeoActivePillBgDark else GeoActivePillBg
+    val dynActivePillText = if (isDarkTheme) GeoActivePillTextDark else GeoActivePillText
+    val dynPrimary = if (isDarkTheme) GeoPrimaryDark else GeoPrimary
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
@@ -841,13 +848,6 @@ fun SearchEngineContent(
         var showDeleteConfirm by remember { mutableStateOf<Int?>(null) }
         var showClearAllConfirm by remember { mutableStateOf(false) }
         val settingsContext2 = androidx.compose.ui.platform.LocalContext.current
-        val dynText = if (isDarkTheme) GeoTextDark else GeoText
-        val dynMuted = if (isDarkTheme) GeoMutedTextDark else GeoMutedText
-        val dynBorder = if (isDarkTheme) GeoBorderDark else GeoBorder
-        val dynSearchBg = if (isDarkTheme) GeoSearchBarBgDark else GeoSearchBarBg
-        val dynActivePillBg = if (isDarkTheme) GeoActivePillBgDark else GeoActivePillBg
-        val dynActivePillText = if (isDarkTheme) GeoActivePillTextDark else GeoActivePillText
-        val dynPrimary = if (isDarkTheme) GeoPrimaryDark else GeoPrimary
 
         AlertDialog(
             onDismissRequest = { onDismissSettings() },
