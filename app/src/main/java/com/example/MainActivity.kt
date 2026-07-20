@@ -632,8 +632,9 @@ fun SearchEngineContent(
             Button(
                 onClick = { showAdvancedFilters = !showAdvancedFilters },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (showAdvancedFilters) dynPrimary else dynSearchBg
+                    containerColor = if (showAdvancedFilters) dynPrimary else androidx.compose.ui.graphics.Color(0x33D0BCFF)
                 ),
+                border = BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0x66D0BCFF)),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.testTag("toggle_filters_button")
             ) {
@@ -653,7 +654,8 @@ fun SearchEngineContent(
                         SortOrder.PRICE_DESC -> SortOrder.NAME_ASC
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = dynSearchBg),
+                colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0x33D0BCFF)),
+                border = BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0x66D0BCFF)),
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
