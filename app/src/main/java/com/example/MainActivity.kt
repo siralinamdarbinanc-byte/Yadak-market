@@ -1279,7 +1279,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
 @Composable
 fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit = {}) {
     NavigationBar(
-        containerColor = if (isDarkTheme) GeoBottomNavBgDark else GeoBottomNavBg,
+        containerColor = GeoBottomNavBg,
         tonalElevation = 8.dp,
         windowInsets = NavigationBarDefaults.windowInsets,
         modifier = Modifier.fillMaxWidth()
@@ -1362,7 +1362,7 @@ fun HeaderSearchBar(
             modifier = Modifier
                 .weight(1f)
                 .height(56.dp)
-                .background(dynSearchBg, RoundedCornerShape(28.dp))
+                .background(GeoSearchBarBg, RoundedCornerShape(28.dp))
                 .border(BorderStroke(1.dp, GeoBorder), RoundedCornerShape(28.dp))
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
