@@ -92,7 +92,8 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             BottomNavBar(
                                 onSettingsClick = { showSettings = true },
-                                onCategoriesClick = { showCategoriesScreen = true }
+                                onCategoriesClick = { showCategoriesScreen = true },
+                                isDarkTheme = isDarkTheme
                             )
                         }
                     ) { innerPadding ->
@@ -594,14 +595,30 @@ fun SearchEngineContent(
         // Import CSV Button
 
         // App Branding / Header
-        Text(
-            text = "یدک مارکت (زینلی)",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = GeoPrimary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "یدک مارکت (زینلی)",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        colors = listOf(
+                            androidx.compose.ui.graphics.Color(0xFF9C6FD6),
+                            androidx.compose.ui.graphics.Color(0xFF6750A4),
+                            androidx.compose.ui.graphics.Color(0xFF4A2C8C)
+                        )
+                    ),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 26.sp
+                )
+            )
+        }
 
         // Search Bar Fill style
         TextField(
@@ -840,7 +857,14 @@ fun SearchEngineContent(
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(filteredProducts, key = { it.row }) { product ->
-                    ProductRowCard(product = product, category = determineCategory(product.name), onClick = { selectedProduct = product })
+                    val visible = remember { androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true } }
+                    androidx.compose.animation.AnimatedVisibility(
+                        visibleState = visible,
+                        enter = androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
+                                androidx.compose.animation.slideInVertically(animationSpec = androidx.compose.animation.core.tween(300)) { it / 2 }
+                    ) {
+                        ProductRowCard(product = product, category = determineCategory(product.name), onClick = { selectedProduct = product })
+                    }
                 }
             }
         }
@@ -1250,9 +1274,13 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
 }
 
 @Composable
-fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit = {}) {
+fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit = {}, isDarkTheme: Boolean = false) {
+    val navBg = if (isDarkTheme) GeoBottomNavBgDark else GeoBottomNavBg
+    val navActive = if (isDarkTheme) GeoActivePillBgDark else GeoActivePillBg
+    val navActiveText = if (isDarkTheme) GeoActivePillTextDark else GeoActivePillText
+    val navMuted = if (isDarkTheme) GeoMutedTextDark else GeoMutedText
     NavigationBar(
-        containerColor = GeoBottomNavBg,
+        containerColor = navBg,
         tonalElevation = 8.dp,
         windowInsets = NavigationBarDefaults.windowInsets,
         modifier = Modifier.fillMaxWidth()
@@ -1271,7 +1299,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                     Icon(
                         imageVector = Icons.Default.Home,
                         contentDescription = "خانه",
-                        tint = GeoActivePillText
+                        tint = navActiveText
                     )
                 }
             },
@@ -1285,7 +1313,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                 Icon(
                     imageVector = Icons.Filled.Category,
                     contentDescription = "دسته‌ها",
-                    tint = GeoMutedText
+                    tint = navMuted
                 )
             },
             label = { Text("دسته‌ها", fontSize = 11.sp, color = GeoMutedText) }
@@ -1298,7 +1326,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                 Icon(
                     imageVector = Icons.Filled.History,
                     contentDescription = "تاریخچه",
-                    tint = GeoMutedText
+                    tint = navMuted
                 )
             },
             label = { Text("تاریخچه", fontSize = 11.sp, color = GeoMutedText) }
@@ -1311,7 +1339,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "تنظیمات",
-                    tint = GeoMutedText
+                    tint = navMuted
                 )
             },
             label = { Text("تنظیمات", fontSize = 11.sp, color = GeoMutedText) }
