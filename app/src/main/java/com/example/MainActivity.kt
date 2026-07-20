@@ -869,7 +869,7 @@ fun SearchEngineContent(
                 var selectedBrandsForMarkup by remember { mutableStateOf(brandMarkupMap.keys) }
                 val allBrandsForMarkup by viewModel.availableBrands.collectAsState()
 
-                var expandedData by remember { mutableStateOf(true) }
+                var expandedData by remember { mutableStateOf(false) }
                 var expandedTheme by remember { mutableStateOf(false) }
                 var expandedMarkup by remember { mutableStateOf(false) }
                 var expandedFiles by remember { mutableStateOf(false) }
