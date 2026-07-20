@@ -1045,35 +1045,6 @@ fun SearchEngineContent(
                         }
                     }
 
-                    if (csvFiles.isNotEmpty()) {
-                        HorizontalDivider(color = GeoBorder)
-                        Text("فایل‌های وارد شده:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
-                        csvFiles.forEach { csv ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = dynSearchBg),
-                                border = BorderStroke(1.dp, GeoBorder),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(10.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = csv.fileName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
-                                        Text(text = "${csv.productCount} محصول", fontSize = 11.sp, color = dynMuted)
-                                    }
-                                    IconButton(onClick = { showDeleteConfirm = csv.id }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Color.Red)
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Text("هنوز فایل CSV وارد نشده", fontSize = 12.sp, color = GeoMutedText, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    }
-                }
             },
             confirmButton = {}
         )
