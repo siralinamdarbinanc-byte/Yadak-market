@@ -917,6 +917,36 @@ fun SearchEngineContent(
                                 Text("تعداد کل کالاهای وارد شده:", fontSize = 13.sp, color = dynMuted)
                                 Text("$totalProducts کالا", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynPrimary)
                             }
+                            if (csvFiles.isNotEmpty()) {
+                                HorizontalDivider(color = dynBorder)
+                                Text("فایل‌های وارد شده:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = dynText)
+                                csvFiles.forEach { csv ->
+                                    val displayName = csv.fileName
+                                        .removePrefix("document:")
+                                        .replace("_", " ")
+                                        .replace("-", " ")
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = dynSearchBg),
+                                        border = BorderStroke(1.dp, dynBorder),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(10.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(text = displayName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = dynText)
+                                                Text(text = "${csv.productCount} محصول", fontSize = 11.sp, color = dynMuted)
+                                            }
+                                            IconButton(onClick = { showDeleteConfirm = csv.id }) {
+                                                Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Color.Red)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
