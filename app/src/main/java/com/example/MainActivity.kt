@@ -641,7 +641,7 @@ fun SearchEngineContent(
                 Text(
                     text = if (showAdvancedFilters) "پنهان کردن فیلترها" else "فیلترهای پیشرفته",
                     fontSize = 12.sp,
-                    color = GeoText
+                    color = dynText
                 )
             }
 
@@ -665,7 +665,7 @@ fun SearchEngineContent(
                         SortOrder.PRICE_DESC -> "قیمت: نزولی"
                     },
                     fontSize = 12.sp,
-                    color = GeoText
+                    color = dynText
                 )
             }
         }
