@@ -192,7 +192,7 @@ fun SearchEngineContent(
     csvPreview?.let { preview ->
         AlertDialog(
             onDismissRequest = { viewModel.cancelImport() },
-            containerColor = GeoInactivePillBg,
+            containerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg,
             shape = RoundedCornerShape(16.dp),
             title = { Text("بررسی فایل CSV", fontWeight = FontWeight.Bold, color = GeoText) },
             text = {
@@ -613,8 +613,8 @@ fun SearchEngineContent(
             placeholder = { Text("نام کالا یا برند را جستجو کنید...", fontSize = 14.sp) },
             singleLine = true,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = GeoSearchBarBg,
-                unfocusedContainerColor = GeoSearchBarBg,
+                focusedContainerColor = dynSearchBg,
+                unfocusedContainerColor = dynSearchBg,
                 focusedIndicatorColor = GeoPrimary,
                 unfocusedIndicatorColor = GeoBorder
             ),
@@ -632,7 +632,7 @@ fun SearchEngineContent(
             Button(
                 onClick = { showAdvancedFilters = !showAdvancedFilters },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (showAdvancedFilters) GeoPrimary else GeoSearchBarBg
+                    containerColor = if (showAdvancedFilters) dynPrimary else dynSearchBg
                 ),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.testTag("toggle_filters_button")
@@ -653,7 +653,7 @@ fun SearchEngineContent(
                         SortOrder.PRICE_DESC -> SortOrder.NAME_ASC
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = GeoSearchBarBg),
+                colors = ButtonDefaults.buttonColors(containerColor = dynSearchBg),
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
@@ -1049,7 +1049,7 @@ fun SearchEngineContent(
         if (showClearAllConfirm) {
             AlertDialog(
                 onDismissRequest = { showClearAllConfirm = false },
-                containerColor = GeoInactivePillBg,
+                containerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg,
                 shape = RoundedCornerShape(16.dp),
                 title = { Text("پاک کردن کامل دیتابیس", fontWeight = FontWeight.Bold, color = GeoText) },
                 text = { Text("تمام محصولات و فایل‌های CSV ثبت‌شده حذف می‌شن. این کار قابل بازگشت نیست. مطمئنی؟", color = GeoText) },
@@ -1068,7 +1068,7 @@ fun SearchEngineContent(
         showDeleteConfirm?.let { csvId ->
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = null },
-                containerColor = GeoInactivePillBg,
+                containerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg,
                 shape = RoundedCornerShape(16.dp),
                 title = { Text("حذف فایل CSV", fontWeight = FontWeight.Bold, color = GeoText) },
                 text = { Text("این فایل و تمام محصولاتش حذف می‌شن. مطمئنی؟", color = GeoText) },
@@ -1093,7 +1093,7 @@ fun SearchEngineContent(
         val roundedPrice2 = calculateDisplayPrice(product.numericPrice, product.brand, generalPercent2, brandMarkupMap2)
         AlertDialog(
             onDismissRequest = { selectedProduct = null },
-            containerColor = GeoInactivePillBg,
+            containerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg,
             shape = RoundedCornerShape(16.dp),
             title = {
                 Row(
@@ -1249,7 +1249,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
 @Composable
 fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit = {}) {
     NavigationBar(
-        containerColor = GeoBottomNavBg,
+        containerColor = if (isDarkTheme) GeoBottomNavBgDark else GeoBottomNavBg,
         tonalElevation = 8.dp,
         windowInsets = NavigationBarDefaults.windowInsets,
         modifier = Modifier.fillMaxWidth()
@@ -1332,7 +1332,7 @@ fun HeaderSearchBar(
             modifier = Modifier
                 .weight(1f)
                 .height(56.dp)
-                .background(GeoSearchBarBg, RoundedCornerShape(28.dp))
+                .background(dynSearchBg, RoundedCornerShape(28.dp))
                 .border(BorderStroke(1.dp, GeoBorder), RoundedCornerShape(28.dp))
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
