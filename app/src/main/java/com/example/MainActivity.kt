@@ -1128,7 +1128,7 @@ fun SearchEngineContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "جزئیات محصول", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = GeoText)
+                    Text(text = "جزئیات محصول", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = dynText)
                     IconButton(onClick = { selectedProduct = null }) {
                         Icon(Icons.Default.Close, contentDescription = "بستن", tint = dynText)
                     }
@@ -1143,7 +1143,7 @@ fun SearchEngineContent(
                         text = product.name,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = GeoText,
+                        color = dynText,
                         textAlign = TextAlign.Right,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -1155,14 +1155,14 @@ fun SearchEngineContent(
                         textAlign = TextAlign.Right,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    HorizontalDivider(color = GeoBorder)
-                    Text(text = "${df2.format(roundedPrice2)} ریال", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = GeoPrimary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Right)
+                    HorizontalDivider(color = dynBorder)
+                    Text(text = "${df2.format(roundedPrice2)} ریال", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = dynPrimary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Right)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = product.row.toString(), fontSize = 12.sp, color = GeoText)
-                        Text(text = "کد محصول:", fontSize = 12.sp, color = GeoMutedText)
+                        Text(text = product.row.toString(), fontSize = 12.sp, color = dynText)
+                        Text(text = "کد محصول:", fontSize = 12.sp, color = dynMuted)
                     }
                 }
             },
@@ -1316,7 +1316,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                     tint = navMuted
                 )
             },
-            label = { Text("دسته‌ها", fontSize = 11.sp, color = GeoMutedText) }
+            label = { Text("دسته‌ها", fontSize = 11.sp, color = navMuted) }
         )
 
         NavigationBarItem(
@@ -1329,7 +1329,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                     tint = navMuted
                 )
             },
-            label = { Text("تاریخچه", fontSize = 11.sp, color = GeoMutedText) }
+            label = { Text("تاریخچه", fontSize = 11.sp, color = navMuted) }
         )
 
         NavigationBarItem(
@@ -1342,7 +1342,7 @@ fun BottomNavBar(onSettingsClick: () -> Unit = {}, onCategoriesClick: () -> Unit
                     tint = navMuted
                 )
             },
-            label = { Text("تنظیمات", fontSize = 11.sp, color = GeoMutedText) }
+            label = { Text("تنظیمات", fontSize = 11.sp, color = navMuted) }
         )
     }
 }
