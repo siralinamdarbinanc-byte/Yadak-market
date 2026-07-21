@@ -33,6 +33,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Percent
@@ -95,25 +98,12 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
-                        bottomBar = {
-                            BottomNavBar(
-                                onSettingsClick = { showSettings = true },
-                                onCategoriesClick = { showCategoriesScreen = true },
-                                isDarkTheme = isDarkTheme
-                            )
-                        }
-                    ) { innerPadding ->
-                        SearchEngineContent(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding),
-                            showSettings = showSettings,
-                            onDismissSettings = { showSettings = false },
                             isDarkTheme = isDarkTheme,
                             onThemeToggle = { newVal ->
                                 isDarkTheme = newVal
                                 prefs.edit().putBoolean("dark_theme", newVal).apply()
-                            }
+                            },
+                            onCategoriesClick = { showCategoriesScreen = true }
                         )
                     }
                 }
@@ -176,7 +166,8 @@ fun SearchEngineContent(
     showSettings: Boolean = false,
     onDismissSettings: () -> Unit = {},
     isDarkTheme: Boolean = false,
-    onThemeToggle: (Boolean) -> Unit = {}
+    onThemeToggle: (Boolean) -> Unit = {},
+    onCategoriesClick: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -601,6 +592,39 @@ fun SearchEngineContent(
     }
 
     Column(
+    val drawerState = androidx.compose.material3.rememberDrawerState(androidx.compose.material3.DrawerValue.Closed)
+    val drawerScope = rememberCoroutineScope()
+
+    androidx.compose.material3.ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            androidx.compose.material3.ModalDrawerSheet(
+                drawerContainerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("منو", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = dynText, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                HorizontalDivider(color = dynBorder)
+                androidx.compose.material3.NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.Home, contentDescription = null, tint = dynPrimary) },
+                    label = { Text("خانه", color = dynText) },
+                    selected = true,
+                    onClick = { drawerScope.launch { drawerState.close() } }
+                )
+                androidx.compose.material3.NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.Category, contentDescription = null, tint = dynPrimary) },
+                    label = { Text("دسته‌ها", color = dynText) },
+                    selected = false,
+                    onClick = { drawerScope.launch { drawerState.close() }; onCategoriesClick() }
+                )
+                androidx.compose.material3.NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.Settings, contentDescription = null, tint = dynPrimary) },
+                    label = { Text("تنظیمات", color = dynText) },
+                    selected = false,
+                    onClick = { drawerScope.launch { drawerState.close() }; onDismissSettings() }
+                )
+            }
+        }
+    ) {
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
@@ -609,6 +633,14 @@ fun SearchEngineContent(
         // Import CSV Button
 
         // App Branding / Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = { drawerScope.launch { drawerState.open() } }) {
+                Icon(Icons.Default.Menu, contentDescription = "منو", tint = dynPrimary)
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1203,6 +1235,7 @@ fun SearchEngineContent(
             },
             confirmButton = {}
         )
+    }
     }
 }
 
