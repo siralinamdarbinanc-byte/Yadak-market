@@ -524,6 +524,8 @@ fun SearchEngineContent(
     var maxPriceInput by remember { mutableStateOf("") }
     var sortOrder by remember { mutableStateOf(SortOrder.NAME_ASC) }
     var showAdvancedFilters by remember { mutableStateOf(false) }
+    BackHandler(enabled = selectedProduct != null) { selectedProduct = null }
+    BackHandler(enabled = showSettings) { onDismissSettings() }
     BackHandler(enabled = showAdvancedFilters) { showAdvancedFilters = false }
 
     // Unique Brands
@@ -879,6 +881,17 @@ fun SearchEngineContent(
                         fontWeight = FontWeight.Bold,
                         color = GeoMutedText
                     )
+                }
+            }
+        } else if (normalizedQuery.isBlank() && selectedCategory == "همه دسته‌ها" && selectedBrand == "همه برندها") {
+            Box(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = dynMuted, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("نام کالا یا برند را جستجو کنید", fontSize = 14.sp, color = dynMuted)
                 }
             }
         } else {
