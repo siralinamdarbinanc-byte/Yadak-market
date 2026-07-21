@@ -26,6 +26,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -173,6 +179,7 @@ fun SearchEngineContent(
     onThemeToggle: (Boolean) -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val allProducts by viewModel.uiState.collectAsState()
     val dynText = if (isDarkTheme) GeoTextDark else GeoText
     val dynMuted = if (isDarkTheme) GeoMutedTextDark else GeoMutedText
@@ -184,7 +191,12 @@ fun SearchEngineContent(
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            val fileName = it.lastPathSegment?.substringAfterLast("/") ?: "فایل ناشناس"
+            val cursor = context.contentResolver.query(it, null, null, null, null)
+            val fileName = cursor?.use { c ->
+                val nameIndex = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                c.moveToFirst()
+                if (nameIndex >= 0) c.getString(nameIndex) else null
+            } ?: it.lastPathSegment?.substringAfterLast("/") ?: "فایل ناشناس"
             viewModel.previewCsv(it, fileName)
         }
     }
@@ -595,28 +607,50 @@ fun SearchEngineContent(
         // Import CSV Button
 
         // App Branding / Header
-        Box(
+        val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
+        val shimmerOffset by shimmerTransition.animateFloat(
+            initialValue = -1f,
+            targetValue = 2f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "shimmerOffset"
+        )
+        val shimmerBrush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+            colors = listOf(
+                androidx.compose.ui.graphics.Color(0xFF4A2C8C),
+                androidx.compose.ui.graphics.Color(0xFF9C6FD6),
+                androidx.compose.ui.graphics.Color(0xFFD0BCFF),
+                androidx.compose.ui.graphics.Color(0xFF9C6FD6),
+                androidx.compose.ui.graphics.Color(0xFF4A2C8C)
+            ),
+            startX = shimmerOffset * 1000f,
+            endX = (shimmerOffset + 1f) * 1000f
+        )
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "یدک مارکت (زینلی)",
-                fontSize = 26.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                        colors = listOf(
-                            androidx.compose.ui.graphics.Color(0xFF9C6FD6),
-                            androidx.compose.ui.graphics.Color(0xFF6750A4),
-                            androidx.compose.ui.graphics.Color(0xFF4A2C8C)
-                        )
-                    ),
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    brush = shimmerBrush,
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 26.sp
+                    fontSize = 30.sp
                 )
+            )
+            Text(
+                text = "لیست قیمت ها",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Normal,
+                color = dynMuted,
+                textAlign = TextAlign.Center
             )
         }
 
