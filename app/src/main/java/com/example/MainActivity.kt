@@ -609,48 +609,36 @@ fun SearchEngineContent(
         // Import CSV Button
 
         // App Branding / Header
-        val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
-        val shimmerOffset by shimmerTransition.animateFloat(
-            initialValue = -1f,
-            targetValue = 2f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            ),
-            label = "shimmerOffset"
-        )
-        val shimmerBrush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-            colors = listOf(
-                androidx.compose.ui.graphics.Color(0xFF4A2C8C),
-                androidx.compose.ui.graphics.Color(0xFF9C6FD6),
-                androidx.compose.ui.graphics.Color(0xFFD0BCFF),
-                androidx.compose.ui.graphics.Color(0xFF9C6FD6),
-                androidx.compose.ui.graphics.Color(0xFF4A2C8C)
-            ),
-            startX = shimmerOffset * 1000f,
-            endX = (shimmerOffset + 1f) * 1000f
-        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            coil.compose.AsyncImage(
+                model = coil.request.ImageRequest.Builder(context)
+                    .data(R.drawable.cars)
+                    .build(),
+                contentDescription = "header animation",
+                modifier = Modifier.height(80.dp).fillMaxWidth(),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
             Text(
                 text = "یدک مارکت (زینلی)",
-                fontSize = 30.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    brush = shimmerBrush,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 30.sp
-                )
+                color = dynPrimary
             )
             Text(
                 text = "لیست قیمت ها",
                 fontSize = 13.sp,
-                fontWeight = FontWeight.Normal,
+                color = dynMuted,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "یدک مارکت زینلی",
+                fontSize = 11.sp,
                 color = dynMuted,
                 textAlign = TextAlign.Center
             )
