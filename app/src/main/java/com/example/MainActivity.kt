@@ -686,11 +686,12 @@ fun SearchEngineContent(
                 .testTag("search_input"),
             placeholder = { Text("نام کالا یا برند را جستجو کنید...", fontSize = 14.sp) },
             singleLine = true,
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = dynPrimary) },
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = dynSearchBg,
-                unfocusedContainerColor = dynSearchBg,
-                focusedIndicatorColor = GeoPrimary,
-                unfocusedIndicatorColor = GeoBorder
+                focusedContainerColor = androidx.compose.ui.graphics.Color(0x44D0BCFF),
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color(0x33D0BCFF),
+                focusedIndicatorColor = dynPrimary,
+                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color(0x66D0BCFF)
             ),
             shape = RoundedCornerShape(12.dp)
         )
@@ -910,8 +911,6 @@ fun SearchEngineContent(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = dynMuted, modifier = Modifier.size(48.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text("نام کالا یا برند را جستجو کنید", fontSize = 14.sp, color = dynMuted)
                 }
             }
