@@ -138,4 +138,14 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
             repository.clearAllData()
         }
     }
+
+    fun updateBarcode(productId: Int, barcode: String) {
+        viewModelScope.launch {
+            repository.updateBarcode(productId, barcode)
+        }
+    }
+
+    suspend fun getProductByBarcode(barcode: String): ProductEntity? {
+        return repository.getProductByBarcode(barcode)
+    }
 }

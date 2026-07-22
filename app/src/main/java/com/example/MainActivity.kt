@@ -97,6 +97,23 @@ class MainActivity : ComponentActivity() {
                         },
                         onClose = { showBarcodeScanner = false }
                     )
+                } else if (showBarcodeForProduct) {
+                    BarcodeScannerScreen(
+                        onBarcodeDetected = { barcode ->
+                            showBarcodeForProduct = false
+                            scanTargetProduct = null
+                        },
+                        onClose = { showBarcodeForProduct = false; scanTargetProduct = null },
+                        targetProduct = scanTargetProduct?.let {
+                            com.example.data.local.entity.ProductEntity(
+                                id = it.id,
+                                name = it.name,
+                                brand = it.brand,
+                                price = it.price,
+                                priceNumeric = it.numericPrice
+                            )
+                        }
+                    )
                 } else if (showDebugWebView) {
                     DebugNetworkScreen(onBack = { showDebugWebView = false })
                 } else if (showCategoriesScreen) {
@@ -170,6 +187,7 @@ fun calculateDisplayPrice(numericPrice: Long, brand: String, generalPercent: Int
 
 // Data model parsed from CSV
 data class Product(
+    val id: Int,
     val row: Int,
     val name: String,
     val brand: String,
@@ -200,6 +218,8 @@ fun SearchEngineContent(
     val dynActivePillText = if (isDarkTheme) GeoActivePillTextDark else GeoActivePillText
     val dynPrimary = if (isDarkTheme) GeoPrimaryDark else GeoPrimary
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
+    var scanTargetProduct by remember { mutableStateOf<Product?>(null) }
+    var showBarcodeForProduct by remember { mutableStateOf(false) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             val cursor = context.contentResolver.query(it, null, null, null, null)
@@ -525,7 +545,7 @@ fun SearchEngineContent(
         Product(6034, "وایر شمع سمند E-F7", "JPA", "3,464,720", 3464720),
         Product(6042, "هواکش کامل پژو 206 تیپ 5", "JPA", "13,111,840", 13111840)
     )
-    val rawProducts = allProducts.map { e -> Product(e.id, e.name, e.brand, e.price, e.priceNumeric) }
+    val rawProducts = allProducts.map { e -> Product(e.id, e.id, e.name, e.brand, e.price, e.priceNumeric) }
 
     // Filters and search logic
     var searchQuery by remember { mutableStateOf("") }
@@ -1247,6 +1267,21 @@ fun SearchEngineContent(
                     ) {
                         Text(text = product.row.toString(), fontSize = 12.sp, color = dynText)
                         Text(text = "کد محصول:", fontSize = 12.sp, color = dynMuted)
+                    }
+                    HorizontalDivider(color = dynBorder)
+                    Button(
+                        onClick = {
+                            selectedProduct = null
+                            scanTargetProduct = product
+                            showBarcodeForProduct = true
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = dynPrimary),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("ثبت بارکد", fontSize = 14.sp, color = Color.White)
                     }
                 }
             },

@@ -10,7 +10,8 @@ data class ProductEntity(
     val brand: String,
     val price: String,
     val priceNumeric: Long,
-    val csvId: Int = 0
+    val csvId: Int = 0,
+    val barcode: String? = null
 ) {
     /**
      * Dynamically determines the category of the auto part based on keywords in its name.

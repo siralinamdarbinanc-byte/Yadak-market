@@ -35,4 +35,10 @@ interface ProductDao {
 
     @Query("UPDATE products SET price = :price, priceNumeric = :priceNumeric WHERE name = :name AND brand = :brand")
     suspend fun updatePriceByNameAndBrand(name: String, brand: String, price: String, priceNumeric: Long)
+
+    @Query("UPDATE products SET barcode = :barcode WHERE id = :productId")
+    suspend fun updateBarcode(productId: Int, barcode: String)
+
+    @Query("SELECT * FROM products WHERE barcode = :barcode LIMIT 1")
+    suspend fun getProductByBarcode(barcode: String): ProductEntity?
 }

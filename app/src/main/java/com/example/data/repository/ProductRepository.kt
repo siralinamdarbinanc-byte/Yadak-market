@@ -179,6 +179,12 @@ class ProductRepository(
         return products
     }
 
+    suspend fun updateBarcode(productId: Int, barcode: String) {
+        productDao.updateBarcode(productId, barcode)
+    }
+
+    suspend fun getProductByBarcode(barcode: String) = productDao.getProductByBarcode(barcode)
+
     private fun parseCsvLine(line: String): List<String> {
         val tokens = mutableListOf<String>()
         val currentToken = StringBuilder()
