@@ -34,6 +34,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -88,7 +89,15 @@ class MainActivity : ComponentActivity() {
                 var showSettings by remember { mutableStateOf(false) }
                 var showDebugWebView by remember { mutableStateOf(false) }
                 var showCategoriesScreen by remember { mutableStateOf(false) }
-                if (showDebugWebView) {
+                var showBarcodeScanner by remember { mutableStateOf(false) }
+                if (showBarcodeScanner) {
+                    BarcodeScannerScreen(
+                        onBarcodeDetected = { barcode ->
+                            showBarcodeScanner = false
+                        },
+                        onClose = { showBarcodeScanner = false }
+                    )
+                } else if (showDebugWebView) {
                     DebugNetworkScreen(onBack = { showDebugWebView = false })
                 } else if (showCategoriesScreen) {
                     CategoriesScreen(
@@ -111,7 +120,8 @@ class MainActivity : ComponentActivity() {
                                 isDarkTheme = newVal
                                 prefs.edit().putBoolean("dark_theme", newVal).apply()
                             },
-                            onCategoriesClick = { showCategoriesScreen = true }
+                            onCategoriesClick = { showCategoriesScreen = true },
+                            onBarcodeScanClick = { showBarcodeScanner = true }
                         )
                     }
                 }
@@ -176,7 +186,8 @@ fun SearchEngineContent(
     onShowSettings: () -> Unit = {},
     isDarkTheme: Boolean = false,
     onThemeToggle: (Boolean) -> Unit = {},
-    onCategoriesClick: () -> Unit = {}
+    onCategoriesClick: () -> Unit = {},
+    onBarcodeScanClick: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -629,6 +640,12 @@ fun SearchEngineContent(
                     label = { Text("تنظیمات", color = dynText) },
                     selected = false,
                     onClick = { drawerScope.launch { drawerState.close() }; onShowSettings() }
+                )
+                androidx.compose.material3.NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = dynPrimary) },
+                    label = { Text("اسکن بارکد", color = dynText) },
+                    selected = false,
+                    onClick = { drawerScope.launch { drawerState.close() }; onBarcodeScanClick() }
                 )
             }
         }
