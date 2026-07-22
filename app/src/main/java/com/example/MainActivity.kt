@@ -591,7 +591,6 @@ fun SearchEngineContent(
         }
     }
 
-    Column(
     val drawerState = androidx.compose.material3.rememberDrawerState(androidx.compose.material3.DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
 
@@ -625,6 +624,7 @@ fun SearchEngineContent(
             }
         }
     ) {
+    Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
@@ -1235,6 +1235,7 @@ fun SearchEngineContent(
             },
             confirmButton = {}
         )
+    }
     }
     }
 }
