@@ -97,7 +97,14 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     Scaffold(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize()
+                    ) { innerPadding ->
+                        SearchEngineContent(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                            showSettings = showSettings,
+                            onDismissSettings = { showSettings = false },
                             isDarkTheme = isDarkTheme,
                             onThemeToggle = { newVal ->
                                 isDarkTheme = newVal
