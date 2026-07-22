@@ -654,7 +654,6 @@ fun SearchEngineContent(
                 .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            )
             Text(
                 text = "یدک مارکت (زینلی)",
                 fontSize = 26.sp,
