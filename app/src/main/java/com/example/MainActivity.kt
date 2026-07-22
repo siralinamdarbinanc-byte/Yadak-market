@@ -684,14 +684,14 @@ fun SearchEngineContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("search_input"),
-            placeholder = { Text("نام کالا یا برند را جستجو کنید...", fontSize = 14.sp) },
+            placeholder = { Text("نام کالا یا برند را جستجو کنید...", fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
             singleLine = true,
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = dynPrimary) },
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = androidx.compose.ui.graphics.Color(0x44D0BCFF),
-                unfocusedContainerColor = androidx.compose.ui.graphics.Color(0x33D0BCFF),
+                focusedContainerColor = androidx.compose.ui.graphics.Color(0x66B39DDB),
+                unfocusedContainerColor = androidx.compose.ui.graphics.Color(0x55B39DDB),
                 focusedIndicatorColor = dynPrimary,
-                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color(0x66D0BCFF)
+                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color(0x88B39DDB)
             ),
             shape = RoundedCornerShape(12.dp)
         )
@@ -1249,13 +1249,24 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
     val displayPriceToman = df.format(roundedPrice)
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("product_card_${product.row}")
-            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = GeoInactivePillBg),
-        border = BorderStroke(1.dp, GeoBorder)
+        colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+        border = BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0x66B39DDB)),
+        modifier = modifier.fillMaxWidth()
+            .testTag("product_card_${product.row}")
+            .clickable { onClick() }
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                    colors = if (isDarkTheme) listOf(
+                        androidx.compose.ui.graphics.Color(0xFF2A2440),
+                        androidx.compose.ui.graphics.Color(0xFF1E1B30)
+                    ) else listOf(
+                        androidx.compose.ui.graphics.Color(0xFFEDE7F6),
+                        androidx.compose.ui.graphics.Color(0xFFF3EDF7)
+                    )
+                ),
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
         Row(
             modifier = Modifier
