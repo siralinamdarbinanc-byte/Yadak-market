@@ -91,6 +91,8 @@ class MainActivity : ComponentActivity() {
                 var showDebugWebView by remember { mutableStateOf(false) }
                 var showCategoriesScreen by remember { mutableStateOf(false) }
                 var showBarcodeScanner by remember { mutableStateOf(false) }
+                var showBarcodeForProduct by remember { mutableStateOf(false) }
+                var scanTargetProduct by remember { mutableStateOf<Product?>(null) }
                 if (showBarcodeScanner) {
                     BarcodeScannerScreen(
                         onBarcodeDetected = { barcode ->
@@ -379,9 +381,9 @@ fun SearchEngineContent(
         Product(3334, 3334, "تسمه تایم107 دندانه پراید -تیبا", "مجد", "11,915,955", 11915955L),
         Product(3338, 3338, "تسمه دینام پژو1800 (1665)", "مجد", "14,160,640", 14160640L),
         Product(3340, 3340, "تسمه دینام پژو206 تیپ5-3 (1568)", "مجد", "13,335,745", 13335745L),
-        Product(3356, "تیغه برف پاک کن پراید - نیسان(\"18\"-18)", "مجد", "3,803,510", 3803510),
-        Product(3357, "تیغه برف پاک کن پژو206 (\"16\"-26)", "مجد", "7,961,450", 7961450),
-        Product(3358, "تیغه برف پاک کن پژو405 - پارس با آب پاش(\"22\"-22)", "مجد", "6,743,485", 6743485),
+        Product(3356, 3356, "تیغه برف پاک کن پراید - نیسان(\"18\"-18)", "مجد", "3,803,510", 3803510L),
+        Product(3357, 3357, "تیغه برف پاک کن پژو206 (\"16\"-26)", "مجد", "7,961,450", 7961450L),
+        Product(3358, 3358, "تیغه برف پاک کن پژو405 - پارس با آب پاش(\"22\"-22)", "مجد", "6,743,485", 6743485L),
         Product(3407, 3407, "درب ترموستات پژو1800 (پلیمری)", "مجد", "1,099,860", 1099860L),
         Product(3408, 3408, "درب ترموستات پژو1800 (فلزی)", "مجد", "3,338,680", 3338680L),
         Product(3413, 3413, "درب رادیاتور پراید پلیمری", "مجد", "1,553,765", 1553765L),
@@ -1297,6 +1299,7 @@ fun SearchEngineContent(
 @Composable
 fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val isDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
     val df = DecimalFormat("#,###")
     val generalPercent = remember { getGeneralMarkupPercent(context) }
     val brandMarkupMap = remember { getBrandMarkupMap(context) }
