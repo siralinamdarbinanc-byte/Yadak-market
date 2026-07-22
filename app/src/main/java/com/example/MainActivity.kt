@@ -1244,7 +1244,6 @@ fun SearchEngineContent(
         )
     }
     }
-    }
 }
 
 @Composable
