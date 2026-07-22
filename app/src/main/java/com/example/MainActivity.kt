@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
                                 .padding(innerPadding),
                             showSettings = showSettings,
                             onDismissSettings = { showSettings = false },
+                            onShowSettings = { showSettings = true },
                             isDarkTheme = isDarkTheme,
                             onThemeToggle = { newVal ->
                                 isDarkTheme = newVal
@@ -172,6 +173,7 @@ fun SearchEngineContent(
     viewModel: ProductViewModel = viewModel(),
     showSettings: Boolean = false,
     onDismissSettings: () -> Unit = {},
+    onShowSettings: () -> Unit = {},
     isDarkTheme: Boolean = false,
     onThemeToggle: (Boolean) -> Unit = {},
     onCategoriesClick: () -> Unit = {}
@@ -626,7 +628,7 @@ fun SearchEngineContent(
                     icon = { Icon(Icons.Filled.Settings, contentDescription = null, tint = dynPrimary) },
                     label = { Text("تنظیمات", color = dynText) },
                     selected = false,
-                    onClick = { drawerScope.launch { drawerState.close() }; onDismissSettings() }
+                    onClick = { drawerScope.launch { drawerState.close() }; onShowSettings() }
                 )
             }
         }
