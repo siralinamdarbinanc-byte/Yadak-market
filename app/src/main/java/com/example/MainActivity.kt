@@ -654,13 +654,6 @@ fun SearchEngineContent(
                 .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            coil.compose.AsyncImage(
-                model = coil.request.ImageRequest.Builder(context)
-                    .data(R.drawable.cars)
-                    .build(),
-                contentDescription = "header animation",
-                modifier = Modifier.height(80.dp).fillMaxWidth(),
-                contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
             Text(
                 text = "یدک مارکت (زینلی)",
