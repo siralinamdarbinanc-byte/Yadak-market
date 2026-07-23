@@ -44,4 +44,19 @@ interface ProductDao {
 
     @Query("SELECT * FROM products WHERE barcode = :barcode LIMIT 1")
     suspend fun getProductByBarcode(barcode: String): ProductEntity?
+
+    @Query("""
+        DELETE FROM products WHERE id NOT IN (
+            SELECT id FROM (
+                SELECT id FROM products p1
+                WHERE id = (
+                    SELECT id FROM products p2
+                    WHERE p2.name = p1.name AND p2.brand = p1.brand
+                    ORDER BY (barcode IS NOT NULL AND barcode != '') DESC, id DESC
+                    LIMIT 1
+                )
+            )
+        )
+    """)
+    suspend fun removeDuplicateProducts()
 }

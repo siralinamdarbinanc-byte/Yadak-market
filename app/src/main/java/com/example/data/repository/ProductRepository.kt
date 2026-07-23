@@ -228,6 +228,15 @@ class ProductRepository(
         }
     }
 
+    suspend fun removeDuplicates(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            productDao.removeDuplicateProducts()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ارسال کل کاتالوگ محلی به سرور (جایگزین کامل روی سرور)
     suspend fun pushCatalogToServer(): Result<Int> = withContext(Dispatchers.IO) {
         try {
