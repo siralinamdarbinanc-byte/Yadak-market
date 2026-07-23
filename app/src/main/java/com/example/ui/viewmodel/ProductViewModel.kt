@@ -155,7 +155,11 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateBarcode(productId: Int, barcode: String) {
         viewModelScope.launch {
-            repository.updateBarcode(productId, barcode)
+            val result = repository.updateBarcode(productId, barcode)
+            _syncStatus.value = result.fold(
+                onSuccess = { "بارکد ذخیره و به سرور ارسال شد" },
+                onFailure = { e -> "بارکد محلی ذخیره شد ولی ارسال به سرور ناموفق بود: ${e.message}" }
+            )
         }
     }
 

@@ -194,13 +194,15 @@ class ProductRepository(
         return products
     }
 
-    suspend fun updateBarcode(productId: Int, barcode: String) {
+    suspend fun updateBarcode(productId: Int, barcode: String): Result<Unit> {
         productDao.updateBarcode(productId, barcode)
         // ارسال به سرور محلی؛ اگه سرور در دسترس نبود، دیتای محلی همچنان درست ثبت شده
-        try {
+        return try {
             RetrofitClient.apiService.updateBarcode(productId, UpdateBarcodeRequest(barcode))
+            Result.success(Unit)
         } catch (e: Exception) {
             Log.e("ProductRepository", "Failed to push barcode to server", e)
+            Result.failure(e)
         }
     }
 
