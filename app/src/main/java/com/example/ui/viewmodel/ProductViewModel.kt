@@ -62,6 +62,7 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private val rawProductsFlow: Flow<List<ProductEntity>> = _filterState
         .map { it.query }
         .distinctUntilChanged()
+        .debounce(300)
         .flatMapLatest { query ->
             if (query.isBlank()) repository.getAllProducts()
             else repository.searchProducts(query)
