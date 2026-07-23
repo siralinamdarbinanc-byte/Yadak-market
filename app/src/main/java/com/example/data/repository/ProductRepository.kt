@@ -7,8 +7,13 @@ import com.example.data.local.dao.ProductDao
 import com.example.data.local.dao.CsvFileDao
 import com.example.data.local.entity.ProductEntity
 import com.example.data.local.entity.CsvFileEntity
+import com.example.data.remote.ApiProduct
+import com.example.data.remote.BulkUploadRequest
+import com.example.data.remote.RetrofitClient
+import com.example.data.remote.UpdateBarcodeRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -181,6 +186,62 @@ class ProductRepository(
 
     suspend fun updateBarcode(productId: Int, barcode: String) {
         productDao.updateBarcode(productId, barcode)
+        // ارسال به سرور محلی؛ اگه سرور در دسترس نبود، دیتای محلی همچنان درست ثبت شده
+        try {
+            RetrofitClient.apiService.updateBarcode(productId, UpdateBarcodeRequest(barcode))
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "Failed to push barcode to server", e)
+        }
+    }
+
+    // گرفتن کل کاتالوگ از سرور و جایگزینی کامل دیتابیس محلی
+    // (id هایی که سرور برمی‌گردونه عیناً به‌عنوان id محلی ذخیره می‌شن، تا ثبت بارکد بعدی روی همون id درست به سرور بره)
+    suspend fun syncFromServer(): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val serverProducts = RetrofitClient.apiService.getProducts()
+            val entities = serverProducts.map {
+                ProductEntity(
+                    id = it.id,
+                    name = it.name,
+                    brand = it.brand,
+                    price = it.price,
+                    priceNumeric = it.priceNumeric,
+                    csvId = it.csvId,
+                    barcode = it.barcode
+                )
+            }
+            productDao.deleteAll()
+            if (entities.isNotEmpty()) {
+                productDao.insertAll(entities)
+            }
+            Result.success(entities.size)
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "Error syncing from server", e)
+            Result.failure(e)
+        }
+    }
+
+    // ارسال کل کاتالوگ محلی به سرور (جایگزین کامل روی سرور)
+    suspend fun pushCatalogToServer(): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val localProducts = productDao.getAllProducts().first()
+            val items = localProducts.map {
+                ApiProduct(
+                    id = it.id,
+                    name = it.name,
+                    brand = it.brand,
+                    price = it.price,
+                    priceNumeric = it.priceNumeric,
+                    csvId = it.csvId,
+                    barcode = it.barcode
+                )
+            }
+            val response = RetrofitClient.apiService.bulkUpload(BulkUploadRequest(items = items, mode = "replace"))
+            Result.success(response.count)
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "Error pushing catalog to server", e)
+            Result.failure(e)
+        }
     }
 
     suspend fun getProductByBarcode(barcode: String) = productDao.getProductByBarcode(barcode)

@@ -1030,6 +1030,29 @@ fun SearchEngineContent(
                     }
                     if (expandedData) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(start = 4.dp, end = 4.dp)) {
+                            val syncStatus by viewModel.syncStatus.collectAsState()
+                            Button(
+                                onClick = { viewModel.syncFromServer() },
+                                colors = ButtonDefaults.buttonColors(containerColor = dynPrimary),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.CloudDownload, contentDescription = "sync from server", modifier = Modifier.size(16.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("دریافت کاتالوگ از سرور", fontSize = 14.sp, color = Color.White)
+                            }
+                            OutlinedButton(
+                                onClick = { viewModel.pushCatalogToServer() },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.CloudUpload, contentDescription = "push to server", modifier = Modifier.size(16.dp), tint = dynPrimary)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("ارسال کاتالوگ به سرور", fontSize = 14.sp, color = dynText)
+                            }
+                            syncStatus?.let { status ->
+                                Text(status, fontSize = 12.sp, color = dynMuted)
+                            }
                             Button(
                                 onClick = { csvLauncher.launch("text/*") },
                                 colors = ButtonDefaults.buttonColors(containerColor = dynPrimary),
