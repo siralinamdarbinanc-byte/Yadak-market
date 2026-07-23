@@ -79,8 +79,8 @@ class ProductRepository(
                 if (row.isBlank()) continue
                 val tokens = parseCsvLine(row)
                 if (tokens.size >= 4) {
-                    val name = tokens[1].trim()
-                    val brand = tokens[2].trim().replace("\u200c", "").replace("\u00a0", " ")
+                    val name = normalizeArabic(tokens[1].trim())
+                    val brand = normalizeArabic(tokens[2].trim().replace("\u200c", "").replace("\u00a0", " "))
                     val priceRaw = tokens[3]
                     val priceClean = priceRaw.replace("\"", "").trim()
                     val priceNumeric = priceClean.replace(",", "").replace(".", "").replace(" ", "").replace("تومان", "").toLongOrNull() ?: 0L
@@ -177,8 +177,8 @@ class ProductRepository(
                 if (row.isBlank()) continue
                 val tokens = parseCsvLine(row)
                 if (tokens.size >= 4) {
-                    val name = tokens[1].trim()
-                    val brand = tokens[2].trim()
+                    val name = normalizeArabic(tokens[1].trim())
+                    val brand = normalizeArabic(tokens[2].trim())
                     val priceRaw = tokens[3]
                     val priceClean = priceRaw.replace("\"", "").trim()
                     val priceNumeric = priceClean.replace(",", "").toLongOrNull() ?: 0L
@@ -255,6 +255,8 @@ class ProductRepository(
     }
 
     suspend fun getProductByBarcode(barcode: String) = productDao.getProductByBarcode(barcode)
+
+    private fun normalizeArabic(s: String): String = s.replace('ك', 'ک').replace('ي', 'ی')
 
     private fun parseCsvLine(line: String): List<String> {
         val tokens = mutableListOf<String>()
