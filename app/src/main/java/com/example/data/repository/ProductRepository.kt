@@ -80,7 +80,7 @@ class ProductRepository(
                 val tokens = parseCsvLine(row)
                 if (tokens.size >= 4) {
                     val name = tokens[1].trim()
-                    val brand = tokens[2].trim()
+                    val brand = tokens[2].trim().replace("\u200c", "").replace("\u00a0", " ")
                     val priceRaw = tokens[3]
                     val priceClean = priceRaw.replace("\"", "").trim()
                     val priceNumeric = priceClean.replace(",", "").replace(".", "").replace(" ", "").replace("تومان", "").toLongOrNull() ?: 0L
@@ -98,6 +98,8 @@ class ProductRepository(
             // چک تکراری بر اساس نام + برند
             val names = parsed.map { it.name }
             val brands = parsed.map { it.brand }
+            Log.d("CSV_CHECK", "IMPORT FILE=$fileName rows=${parsed.size}")
+            Log.d("CSV_CHECK", "brands=${parsed.map { it.brand }.distinct()}")
             val existing = productDao.getExistingByNameAndBrand(names, brands)
             val existingMap = existing.associateBy { it.name to it.brand }
 
