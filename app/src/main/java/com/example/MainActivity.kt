@@ -81,6 +81,11 @@ import androidx.compose.runtime.collectAsState
 object MarkupState {
     var generalPercent by androidx.compose.runtime.mutableStateOf(0)
     var brandMap by androidx.compose.runtime.mutableStateOf<Map<String, Int>>(emptyMap())
+    var version by androidx.compose.runtime.mutableStateOf(0)
+
+    fun refresh() {
+        version++
+    }
 }
 
 object ScanState {
@@ -1242,6 +1247,7 @@ fun SearchEngineContent(
                                     val p = generalMarkupInput.toIntOrNull() ?: 0
                                     setGeneralMarkupPercent(settingsContext, p)
                                     MarkupState.generalPercent = p
+                                    MarkupState.refresh()
                                     android.util.Log.d("MARKUP", "اعمال شد: $p")
                                 }) { Text("تایید", fontSize = 12.sp) }
                             }
@@ -1433,6 +1439,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
     val context = androidx.compose.ui.platform.LocalContext.current
     val isDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
     val df = DecimalFormat("#,###")
+    val markupVersion = MarkupState.version
     val generalPercent = MarkupState.generalPercent
     val brandMarkupMap = MarkupState.brandMap
     val priceResult = calculatePriceResult(
