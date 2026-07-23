@@ -194,8 +194,7 @@ class ProductRepository(
         }
     }
 
-    // گرفتن کل کاتالوگ از سرور و جایگزینی کامل دیتابیس محلی
-    // (id هایی که سرور برمی‌گردونه عیناً به‌عنوان id محلی ذخیره می‌شن، تا ثبت بارکد بعدی روی همون id درست به سرور بره)
+    // گرفتن کل کاتالوگ از سرور و آپدیت/اضافه کردن بدون پاک کردن دیتای محلی
     suspend fun syncFromServer(): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val serverProducts = RetrofitClient.apiService.getProducts()
@@ -210,7 +209,8 @@ class ProductRepository(
                     barcode = it.barcode
                 )
             }
-            productDao.deleteAll()
+            // به جای پاک کردن همه، فقط آپدیت/اضافه می‌کنیم
+            // REPLACE strategy: اگه id تکراری بود آپدیت، اگه نبود اضافه
             if (entities.isNotEmpty()) {
                 productDao.insertAll(entities)
             }
