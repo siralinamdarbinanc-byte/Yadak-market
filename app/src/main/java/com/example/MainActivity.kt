@@ -1,10 +1,5 @@
 package com.example
 
-object MarkupState {
-    var generalPercent by androidx.compose.runtime.mutableStateOf(0)
-    var brandMap by androidx.compose.runtime.mutableStateOf<Map<String, Int>>(emptyMap())
-}
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Spacer
@@ -83,6 +78,16 @@ import com.example.data.local.entity.ProductEntity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 
+object MarkupState {
+    var generalPercent by androidx.compose.runtime.mutableStateOf(0)
+    var brandMap by androidx.compose.runtime.mutableStateOf<Map<String, Int>>(emptyMap())
+}
+
+object ScanState {
+    var lastBarcode by androidx.compose.runtime.mutableStateOf<String?>(null)
+}
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +106,7 @@ class MainActivity : ComponentActivity() {
                 if (showBarcodeScanner) {
                     BarcodeScannerScreen(
                         onBarcodeDetected = { barcode ->
+                            ScanState.lastBarcode = barcode
                             showBarcodeScanner = false
                         },
                         onClose = { showBarcodeScanner = false }
@@ -204,7 +210,8 @@ data class Product(
     val name: String,
     val brand: String,
     val price: String,
-    val numericPrice: Long
+    val numericPrice: Long,
+    val barcode: String? = null
 )
 
 @Composable
@@ -558,10 +565,19 @@ fun SearchEngineContent(
         Product(6034, 6034, "وایر شمع سمند E-F7", "JPA", "3,464,720", 3464720L),
         Product(6042, 6042, "هواکش کامل پژو 206 تیپ 5", "JPA", "13,111,840", 13111840L)
     )
-    val rawProducts = allProducts.map { e -> Product(id = e.id, row = e.id, name = e.name, brand = e.brand, price = e.price, numericPrice = e.priceNumeric) }
+    val rawProducts = allProducts.map { e -> Product(id = e.id, row = e.id, name = e.name, brand = e.brand, price = e.price, numericPrice = e.priceNumeric, barcode = e.barcode) }
 
     // Filters and search logic
     var searchQuery by remember { mutableStateOf("") }
+    LaunchedEffect(ScanState.lastBarcode, rawProducts) {
+        ScanState.lastBarcode?.let { code ->
+            val found = rawProducts.find { it.barcode == code }
+            if (found != null) {
+                selectedProduct = found
+            }
+            ScanState.lastBarcode = null
+        }
+    }
     var selectedCategory by remember { mutableStateOf("همه دسته‌ها") }
     var selectedBrand by remember { mutableStateOf("همه برندها") }
     var minPriceInput by remember { mutableStateOf("") }
@@ -742,6 +758,11 @@ fun SearchEngineContent(
             placeholder = { Text("نام کالا یا برند را جستجو کنید...", fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
             singleLine = true,
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = dynPrimary) },
+            trailingIcon = {
+                IconButton(onClick = onBarcodeScanClick) {
+                    Icon(Icons.Default.QrCodeScanner, contentDescription = "بارکد خوان", tint = dynPrimary)
+                }
+            },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = androidx.compose.ui.graphics.Color(0x66B39DDB),
                 unfocusedContainerColor = androidx.compose.ui.graphics.Color(0x55B39DDB),
