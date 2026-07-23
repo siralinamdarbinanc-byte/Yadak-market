@@ -83,7 +83,7 @@ class ProductRepository(
                     val brand = tokens[2].trim()
                     val priceRaw = tokens[3]
                     val priceClean = priceRaw.replace("\"", "").trim()
-                    val priceNumeric = priceClean.replace(",", "").toLongOrNull() ?: 0L
+                    val priceNumeric = priceClean.replace(",", "").replace(".", "").replace(" ", "").replace("تومان", "").toLongOrNull() ?: 0L
                     if (name.isNotBlank()) {
                         parsed.add(Parsed(name, brand, priceClean, priceNumeric))
                     }
