@@ -608,6 +608,11 @@ fun SearchEngineContent(
 
     // Filters and search logic
     var searchQuery by remember { mutableStateOf("") }
+    var debouncedSearchQuery by remember { mutableStateOf("") }
+    LaunchedEffect(searchQuery) {
+        kotlinx.coroutines.delay(300)
+        debouncedSearchQuery = searchQuery
+    }
     LaunchedEffect(Unit) {
         MarkupState.generalPercent = getGeneralMarkupPercent(context)
         MarkupState.brandMap = getBrandMarkupMap(context)
@@ -677,7 +682,7 @@ fun SearchEngineContent(
         return result
     }
 
-    val normalizedQuery = normalizeQuery(searchQuery)
+    val normalizedQuery = normalizeQuery(debouncedSearchQuery)
 
     fun compress(s: String): String = s.replace(Regex("[\\s\u200c]+"), "")
 
