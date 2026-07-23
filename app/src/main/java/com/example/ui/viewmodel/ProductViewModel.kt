@@ -172,7 +172,7 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
             val result = repository.syncFromServer()
             _syncStatus.value = result.fold(
                 onSuccess = { count -> "دریافت شد: $count کالا از سرور" },
-                onFailure = { "خطا در اتصال به سرور. مطمئن شو گوشی و لپ‌تاپ روی یه وای‌فای هستن." }
+                onFailure = { e -> "خطا: ${e.message}" }
             )
         }
     }
@@ -183,7 +183,7 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
             val result = repository.pushCatalogToServer()
             _syncStatus.value = result.fold(
                 onSuccess = { count -> "ارسال شد: $count کالا به سرور" },
-                onFailure = { "خطا در اتصال به سرور. مطمئن شو گوشی و لپ‌تاپ روی یه وای‌فای هستن." }
+                onFailure = { e -> "خطا: ${e.message}" }
             )
         }
     }

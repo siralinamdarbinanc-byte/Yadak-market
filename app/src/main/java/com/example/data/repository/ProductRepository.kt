@@ -48,12 +48,20 @@ class ProductRepository(
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val savedVersion = prefs.getInt("csv_version", 0)
         if (savedVersion >= CSV_VERSION) return@withContext
-        productDao.deleteAll()
-        val products = loadProductsFromCsv()
+        val existingProducts = productDao.getAllProducts().first()
+        val existingById = existingProducts.associateBy { it.id }
+        val products = loadProductsFromCsv().map { newProduct ->
+            val old = existingById[newProduct.id]
+            if (old != null && newProduct.barcode.isNullOrEmpty() && !old.barcode.isNullOrEmpty()) {
+                newProduct.copy(barcode = old.barcode)
+            } else {
+                newProduct
+            }
+        }
         if (products.isNotEmpty()) {
             productDao.insertAll(products)
             prefs.edit().putInt("csv_version", CSV_VERSION).apply()
-            Log.d("ProductRepository", "Synced ${products.size} products.")
+            Log.d("ProductRepository", "Synced ${products.size} products (barcodes preserved).")
         }
     }
 
