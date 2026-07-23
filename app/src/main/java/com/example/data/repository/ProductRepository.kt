@@ -210,23 +210,18 @@ class ProductRepository(
     suspend fun syncFromServer(): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val serverProducts = RetrofitClient.apiService.getProducts()
-            val entities = serverProducts.map {
-                ProductEntity(
-                    id = it.id,
-                    name = it.name,
-                    brand = it.brand,
-                    price = it.price,
-                    priceNumeric = it.priceNumeric,
-                    csvId = it.csvId,
-                    barcode = it.barcode
+            var count = 0
+            for (p in serverProducts) {
+                productDao.updateFromServerByNameAndBrand(
+                    name = p.name,
+                    brand = p.brand,
+                    barcode = p.barcode ?: "",
+                    price = p.price,
+                    priceNumeric = p.priceNumeric
                 )
+                count++
             }
-            // به جای پاک کردن همه، فقط آپدیت/اضافه می‌کنیم
-            // REPLACE strategy: اگه id تکراری بود آپدیت، اگه نبود اضافه
-            if (entities.isNotEmpty()) {
-                productDao.insertAll(entities)
-            }
-            Result.success(entities.size)
+            Result.success(count)
         } catch (e: Exception) {
             Log.e("ProductRepository", "Error syncing from server", e)
             Result.failure(e)
