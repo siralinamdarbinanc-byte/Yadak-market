@@ -608,17 +608,22 @@ fun SearchEngineContent(
         var result = q
         persian.forEachIndexed { i, c -> result = result.replace(c, '0' + i) }
         arabic.forEachIndexed { i, c -> result = result.replace(c, '0' + i) }
+        result = result.replace('ي', 'ی').replace('ك', 'ک')
+            .replace('ة', 'ه').replace('أ', 'ا').replace('إ', 'ا').replace('ؤ', 'و')
         return result
     }
 
     val normalizedQuery = normalizeQuery(searchQuery)
+
+    fun compress(s: String): String = s.replace(Regex("[\\s\u200c]+"), "")
 
     val filteredProducts = remember(normalizedQuery, selectedCategory, selectedBrand, minPriceInput, maxPriceInput, sortOrder) {
         rawProducts.filter { product ->
             val matchesQuery = if (normalizedQuery.isBlank()) true else {
                 val tokens = normalizedQuery.trim().split(Regex("\\s+"))
                 val searchIn = normalizeQuery(product.name) + " " + normalizeQuery(product.brand)
-                tokens.all { token -> searchIn.contains(token) }
+                val tokenMatch = tokens.all { token -> searchIn.contains(token) }
+                tokenMatch || compress(searchIn).contains(compress(normalizedQuery))
             }
             val productCat = determineCategory(product.name)
             val matchesCategory = selectedCategory == "همه دسته‌ها" || productCat == selectedCategory
