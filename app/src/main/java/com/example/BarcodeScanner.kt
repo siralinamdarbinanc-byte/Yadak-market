@@ -48,6 +48,8 @@ fun BarcodeScannerScreen(
     var scannedValue by remember { mutableStateOf<String?>(null) }
     var foundProduct by remember { mutableStateOf<ProductEntity?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
+    var registeredBarcode by remember { mutableStateOf<String?>(null) }
+    var notFoundBarcode by remember { mutableStateOf<String?>(null) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasCameraPermission = granted
@@ -64,18 +66,26 @@ fun BarcodeScannerScreen(
                 if (targetProduct != null) {
                     // حالت ثبت بارکد برای کالا
                     viewModel.updateBarcode(targetProduct.id, barcode)
-                    onBarcodeDetected(barcode)
+                    registeredBarcode = barcode
                 } else {
                     // حالت جستجو با بارکد
                     val product = viewModel.getProductByBarcode(barcode)
                     if (product != null) {
                         foundProduct = product
                     } else {
-                        onBarcodeDetected(barcode)
+                        notFoundBarcode = barcode
                     }
                 }
             }
         }
+    }
+
+    fun resetScan() {
+        scannedValue = null
+        isProcessing = false
+        foundProduct = null
+        registeredBarcode = null
+        notFoundBarcode = null
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -160,7 +170,64 @@ fun BarcodeScannerScreen(
                             Button(onClick = { onBarcodeDetected(product.barcode ?: "") }) {
                                 Text("مشاهده")
                             }
-                            OutlinedButton(onClick = { foundProduct = null; scannedValue = null; isProcessing = false }) {
+                            OutlinedButton(onClick = { resetScan() }) {
+                                Text("اسکن مجدد", color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // پیام ثبت موفق بارکد برای کالا
+        registeredBarcode?.let { barcode ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xEE1E1B30))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("✅ بارکد ثبت شد", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = GeoPrimary)
+                        Text(barcode, fontSize = 14.sp, color = Color.White)
+                        if (targetProduct != null) {
+                            Text("برای: ${targetProduct.name}", fontSize = 13.sp, color = Color.White)
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { onBarcodeDetected(barcode) }) {
+                                Text("باشه")
+                            }
+                            OutlinedButton(onClick = { resetScan() }) {
+                                Text("اسکن مجدد", color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // پیام پیدا نشدن کالا با این بارکد
+        notFoundBarcode?.let { barcode ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xEE1E1B30))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("کالایی با این بارکد پیدا نشد", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Red)
+                        Text(barcode, fontSize = 14.sp, color = Color.White)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = { onClose() }) {
+                                Text("بستن")
+                            }
+                            OutlinedButton(onClick = { resetScan() }) {
                                 Text("اسکن مجدد", color = Color.White)
                             }
                         }
