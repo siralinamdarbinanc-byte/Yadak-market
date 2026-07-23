@@ -199,6 +199,11 @@ fun setBrandMarkupMap(context: android.content.Context, map: Map<String, Int>) {
 fun calculateDisplayPrice(numericPrice: Long, brand: String, generalPercent: Int, brandMarkupMap: Map<String, Int>): Long {
     val rawPrice = if (numericPrice < 80000) (numericPrice * 1.4).toLong() else numericPrice
     val percent = brandMarkupMap[brand] ?: generalPercent
+
+    android.util.Log.d(
+        "MARKUP",
+        "brand=$brand general=$generalPercent brandPercent=${brandMarkupMap[brand]} finalPercent=$percent price=$numericPrice"
+    )
     val withMarkup = rawPrice + (rawPrice * percent / 100)
     return (withMarkup / 1000 + if (withMarkup % 1000 > 0) 1 else 0) * 1000
 }
