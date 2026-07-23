@@ -141,7 +141,11 @@ class MainActivity : ComponentActivity() {
                                 prefs.edit().putBoolean("dark_theme", newVal).apply()
                             },
                             onCategoriesClick = { showCategoriesScreen = true },
-                            onBarcodeScanClick = { showBarcodeScanner = true }
+                            onBarcodeScanClick = { showBarcodeScanner = true },
+                            onRegisterBarcodeClick = { product ->
+                                scanTargetProduct = product
+                                showBarcodeForProduct = true
+                            }
                         )
                     }
                 }
@@ -208,7 +212,8 @@ fun SearchEngineContent(
     isDarkTheme: Boolean = false,
     onThemeToggle: (Boolean) -> Unit = {},
     onCategoriesClick: () -> Unit = {},
-    onBarcodeScanClick: () -> Unit = {}
+    onBarcodeScanClick: () -> Unit = {},
+    onRegisterBarcodeClick: (Product) -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -221,8 +226,6 @@ fun SearchEngineContent(
     val dynActivePillText = if (isDarkTheme) GeoActivePillTextDark else GeoActivePillText
     val dynPrimary = if (isDarkTheme) GeoPrimaryDark else GeoPrimary
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
-    var scanTargetProduct by remember { mutableStateOf<Product?>(null) }
-    var showBarcodeForProduct by remember { mutableStateOf(false) }
     val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             val cursor = context.contentResolver.query(it, null, null, null, null)
@@ -1277,8 +1280,7 @@ fun SearchEngineContent(
                     Button(
                         onClick = {
                             selectedProduct = null
-                            scanTargetProduct = product
-                            showBarcodeForProduct = true
+                            onRegisterBarcodeClick(product)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = dynPrimary),
                         shape = RoundedCornerShape(10.dp),
