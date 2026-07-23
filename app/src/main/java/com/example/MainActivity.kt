@@ -569,6 +569,10 @@ fun SearchEngineContent(
 
     // Filters and search logic
     var searchQuery by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        MarkupState.generalPercent = getGeneralMarkupPercent(context)
+        MarkupState.brandMap = getBrandMarkupMap(context)
+    }
     LaunchedEffect(ScanState.lastBarcode, rawProducts) {
         ScanState.lastBarcode?.let { code ->
             val found = rawProducts.find { it.barcode == code }
