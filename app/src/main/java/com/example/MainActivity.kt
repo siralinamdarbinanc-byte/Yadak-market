@@ -1394,7 +1394,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
                     text = product.name,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = GeoText
+                        color = if (isDarkTheme) GeoTextDark else GeoText
                     ),
                     textAlign = TextAlign.Right,
                     maxLines = 2
@@ -1426,7 +1426,7 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
                 Text(
                     text = "",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = GeoMutedText,
+                        color = if (isDarkTheme) GeoMutedTextDark else GeoMutedText,
                         fontSize = 10.sp
                     )
                 )
