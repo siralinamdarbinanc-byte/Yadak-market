@@ -1213,6 +1213,7 @@ fun SearchEngineContent(
                                     val p = generalMarkupInput.toIntOrNull() ?: 0
                                     setGeneralMarkupPercent(settingsContext, p)
                                     MarkupState.generalPercent = p
+                                    android.util.Log.d("MARKUP", "اعمال شد: $p")
                                 }) { Text("تایید", fontSize = 12.sp) }
                             }
                             Text("یا برای برند خاص درصد متفاوت بذار:", fontSize = 12.sp, color = dynMuted)
