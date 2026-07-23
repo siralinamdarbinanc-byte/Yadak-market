@@ -196,6 +196,35 @@ fun setBrandMarkupMap(context: android.content.Context, map: Map<String, Int>) {
 }
 
 // محاسبه قیمت نمایشی نهایی: قانون قدیمی (زیر 80000 ضربدر 1.4) + درصد مارک‌آپ (عمومی یا برند-محور)
+
+data class PriceResult(
+    val buyPrice: Long,
+    val sellPrice: Long,
+    val profit: Long,
+    val markupPercent: Int
+)
+
+fun calculatePriceResult(
+    buyPrice: Long,
+    brand: String,
+    generalPercent: Int,
+    brandMarkupMap: Map<String, Int>
+): PriceResult {
+
+    val percent = brandMarkupMap[brand] ?: generalPercent
+
+    val sell = buyPrice + (buyPrice * percent / 100)
+
+    val roundedSell = (sell / 1000 + if (sell % 1000 > 0) 1 else 0) * 1000
+
+    return PriceResult(
+        buyPrice = buyPrice,
+        sellPrice = roundedSell,
+        profit = roundedSell - buyPrice,
+        markupPercent = percent
+    )
+}
+
 fun calculateDisplayPrice(numericPrice: Long, brand: String, generalPercent: Int, brandMarkupMap: Map<String, Int>): Long {
     val rawPrice = if (numericPrice < 80000) (numericPrice * 1.4).toLong() else numericPrice
     val percent = brandMarkupMap[brand] ?: generalPercent
@@ -1301,7 +1330,8 @@ fun SearchEngineContent(
         val df2 = DecimalFormat("#,###")
         val generalPercent2 = MarkupState.generalPercent
         val brandMarkupMap2 = MarkupState.brandMap
-        val roundedPrice2 = calculateDisplayPrice(product.numericPrice, product.brand, generalPercent2, brandMarkupMap2)
+        val priceResult2 = calculatePriceResult(product.numericPrice, product.brand, generalPercent2, brandMarkupMap2)
+        val roundedPrice2 = priceResult2.sellPrice
         AlertDialog(
             onDismissRequest = { selectedProduct = null },
             containerColor = if (isDarkTheme) GeoInactivePillBgDark else GeoInactivePillBg,
@@ -1340,7 +1370,35 @@ fun SearchEngineContent(
                         modifier = Modifier.fillMaxWidth()
                     )
                     HorizontalDivider(color = dynBorder)
-                    Text(text = "${df2.format(roundedPrice2)} ریال", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = dynPrimary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Right)
+                    Text(
+                        text = "قیمت خرید: ${df2.format(priceResult2.buyPrice)} ریال",
+                        fontSize = 14.sp,
+                        color = dynText,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Right
+                    )
+                    Text(
+                        text = "مارکاپ: ${priceResult2.markupPercent}٪",
+                        fontSize = 14.sp,
+                        color = dynText,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Right
+                    )
+                    Text(
+                        text = "قیمت فروش: ${df2.format(priceResult2.sellPrice)} ریال",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = dynPrimary,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Right
+                    )
+                    Text(
+                        text = "سود: ${df2.format(priceResult2.profit)} ریال",
+                        fontSize = 14.sp,
+                        color = dynText,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Right
+                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1377,8 +1435,12 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
     val df = DecimalFormat("#,###")
     val generalPercent = MarkupState.generalPercent
     val brandMarkupMap = MarkupState.brandMap
-    val roundedPrice = calculateDisplayPrice(product.numericPrice, product.brand, generalPercent, brandMarkupMap)
-    val displayPriceToman = df.format(roundedPrice)
+    val priceResult = calculatePriceResult(
+        product.numericPrice,
+        product.brand,
+        generalPercent,
+        brandMarkupMap
+    )
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -1466,10 +1528,17 @@ fun ProductRowCard(product: Product, category: String, onClick: () -> Unit = {})
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "$displayPriceToman ریال",
+                    text = "فروش: ${df.format(priceResult.sellPrice)} ریال",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = GeoPrimary
+                    )
+                )
+                Text(
+                    text = "خرید: ${df.format(priceResult.buyPrice)} | سود: ${df.format(priceResult.profit)} ریال",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = if (isDarkTheme) GeoMutedTextDark else GeoMutedText,
+                        fontSize = 10.sp
                     )
                 )
                 Text(
