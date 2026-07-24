@@ -405,7 +405,7 @@ fun SearchEngineContent(
     BackHandler(enabled = showAdvancedFilters) { showAdvancedFilters = false }
 
     // Unique Brands
-    val brandsList = remember { listOf("همه برندها") + rawProducts.map { it.brand }.distinct().sorted() }
+    val brandsList = remember { listOf("همه برندها", "ایران خودرو", "سایپا", "مشترک") }
 
     // Dynamic Categories helper based on names
     fun determineCategory(name: String): String {
@@ -588,6 +588,89 @@ fun SearchEngineContent(
             shape = RoundedCornerShape(12.dp)
         )
 
+        // Brand Selector
+        Text("فیلتر بر اساس برند:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GeoText)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val isSelectedAll = selectedBrand == "همه برندها"
+            Surface(
+                onClick = { selectedBrand = "همه برندها" },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(8.dp),
+                color = if (isSelectedAll) dynActivePillBg else dynSearchBg,
+                border = BorderStroke(1.dp, if (isSelectedAll) GeoPrimary else GeoBorder)
+            ) {
+                Text(
+                    text = "همه",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (isSelectedAll) dynActivePillText else dynMuted,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+
+            val isSelectedIKCO = selectedBrand == "ایران خودرو"
+            Surface(
+                onClick = { selectedBrand = "ایران خودرو" },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(8.dp),
+                color = if (isSelectedIKCO) dynActivePillBg else dynSearchBg,
+                border = BorderStroke(1.dp, if (isSelectedIKCO) GeoPrimary else GeoBorder)
+            ) {
+                Text(
+                    text = "ایران خودرو",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (isSelectedIKCO) dynActivePillText else dynMuted,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+
+            val isSelectedSaipa = selectedBrand == "سایپا"
+            Surface(
+                onClick = { selectedBrand = "سایپا" },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(8.dp),
+                color = if (isSelectedSaipa) dynActivePillBg else dynSearchBg,
+                border = BorderStroke(1.dp, if (isSelectedSaipa) GeoPrimary else GeoBorder)
+            ) {
+                Text(
+                    text = "سایپا",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (isSelectedSaipa) dynActivePillText else dynMuted,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+
+            val isSelectedCommon = selectedBrand == "مشترک"
+            Surface(
+                onClick = { selectedBrand = "مشترک" },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(8.dp),
+                color = if (isSelectedCommon) dynActivePillBg else dynSearchBg,
+                border = BorderStroke(1.dp, if (isSelectedCommon) GeoPrimary else GeoBorder)
+            ) {
+                Text(
+                    text = "مشترک",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (isSelectedCommon) dynActivePillText else dynMuted,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(10.dp))
 
         // Toggle Filter Button and Sort selector
@@ -678,33 +761,6 @@ fun SearchEngineContent(
                         }
                     }
 
-                    // Brand Selector
-                    Text("فیلتر بر اساس برند:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GeoText)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        brandsList.forEach { brand ->
-                            val isSelected = selectedBrand == brand
-                            Surface(
-                                onClick = { selectedBrand = brand },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) dynActivePillBg else dynSearchBg,
-                                border = BorderStroke(1.dp, if (isSelected) GeoPrimary else GeoBorder)
-                            ) {
-                                Text(
-                                    text = brand,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = if (isSelected) dynActivePillText else dynMuted,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
-                        }
-                    }
 
                     // Price Range input
                     Text("محدوده قیمت (ریال):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = GeoText)
