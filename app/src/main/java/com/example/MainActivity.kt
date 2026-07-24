@@ -378,7 +378,7 @@ fun SearchEngineContent(
     var searchQuery by remember { mutableStateOf("") }
     var debouncedSearchQuery by remember { mutableStateOf("") }
     LaunchedEffect(searchQuery) {
-        kotlinx.coroutines.delay(300)
+        kotlinx.coroutines.delay(2500)
         debouncedSearchQuery = searchQuery
     }
     LaunchedEffect(Unit) {
