@@ -378,10 +378,11 @@ fun SearchEngineContent(
     var searchQuery by remember { mutableStateOf("") }
     var debouncedSearchQuery by remember { mutableStateOf("") }
     LaunchedEffect(searchQuery) {
-        kotlinx.coroutines.delay(2500)
+        kotlinx.coroutines.delay(1000)
         debouncedSearchQuery = searchQuery
     }
     LaunchedEffect(Unit) {
+        viewModel.normalizeBrands()
         MarkupState.generalPercent = getGeneralMarkupPercent(context)
         MarkupState.brandMap = getBrandMarkupMap(context)
     }

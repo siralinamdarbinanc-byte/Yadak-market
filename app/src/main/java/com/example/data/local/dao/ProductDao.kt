@@ -45,6 +45,9 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE barcode = :barcode LIMIT 1")
     suspend fun getProductByBarcode(barcode: String): ProductEntity?
 
+    @Query("UPDATE products SET brand = REPLACE(REPLACE(brand, 'ي', 'ی'), 'ك', 'ک')")
+    suspend fun normalizeExistingBrands()
+
     @Query("""
         DELETE FROM products WHERE id NOT IN (
             SELECT id FROM (

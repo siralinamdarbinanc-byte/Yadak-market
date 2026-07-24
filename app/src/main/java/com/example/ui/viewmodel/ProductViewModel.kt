@@ -62,7 +62,7 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private val rawProductsFlow: Flow<List<ProductEntity>> = _filterState
         .map { it.query }
         .distinctUntilChanged()
-        .debounce(2500)
+        .debounce(1000)
         .flatMapLatest { query ->
             if (query.isBlank()) repository.getAllProducts()
             else repository.searchProducts(query)
@@ -145,6 +145,12 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     fun deleteCsv(csvId: Int) {
         viewModelScope.launch {
             repository.deleteCsvAndProducts(csvId)
+        }
+    }
+
+    fun normalizeBrands() {
+        viewModelScope.launch {
+            repository.normalizeBrands()
         }
     }
 

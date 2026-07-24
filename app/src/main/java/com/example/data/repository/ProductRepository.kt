@@ -228,6 +228,15 @@ class ProductRepository(
         }
     }
 
+    suspend fun normalizeBrands(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            productDao.normalizeExistingBrands()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun removeDuplicates(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             productDao.removeDuplicateProducts()
